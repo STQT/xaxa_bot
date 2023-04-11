@@ -1,0 +1,17 @@
+[Unit]
+Description=asas Bot
+After=syslog.target
+After=network.target
+
+[Service]
+Restart=always
+RestartSec=2s
+Type=simple
+User=root
+Group=root
+MemoryLimit=1G
+WorkingDirectory=/home/Bot/as_as_bot
+ExecStart=/home/Bot/as_as_bot/venv/bin/python /home/Bot/as_as_bot/bot.py
+
+[Install]
+WantedBy=multi-user.target
