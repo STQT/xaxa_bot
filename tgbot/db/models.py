@@ -25,3 +25,20 @@ class City(db.Model):
     name_ru = Column(VARCHAR(200))
     name_en = Column(VARCHAR(200))
     date = Column(DateTime, default=datetime.datetime.utcnow())
+
+
+class Market(db.Model):
+    __tablename__ = 'markets'
+    query: sql.Select
+
+    id = Column(INTEGER(), primary_key=True, autoincrement=True)
+    name_uz = Column(VARCHAR(200))
+    name_ru = Column(VARCHAR(200))
+    name_en = Column(VARCHAR(200))
+    region = Column(VARCHAR(100))
+    address = Column(VARCHAR(200))
+    type = Column(VARCHAR(500))
+    activity = Column(VARCHAR(500))
+    number = Column(VARCHAR(30))
+    date = Column(DateTime, default=datetime.datetime.utcnow())
+
