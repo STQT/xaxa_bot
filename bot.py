@@ -5,6 +5,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.contrib.fsm_storage.redis import RedisStorage2
 
+from datas import runn
 from tgbot.config import load_config
 from tgbot.db.database import create_db
 from tgbot.filters.admin import AdminFilter
@@ -48,7 +49,7 @@ async def main():
     config = load_config(".env")
 
     storage = RedisStorage2() if config.tg_bot.use_redis else MemoryStorage()
-    bot = Bot(token=config.tg_bot.token, parse_mode='HTML')
+    bot = Bot(token="5775894811:AAGDUsr0iS0uiZyVXrFxAK1oNL0E4WWKdgQ", parse_mode='HTML')
     dp = Dispatcher(bot, storage=storage)
 
     bot['config'] = config
@@ -58,6 +59,7 @@ async def main():
     register_all_handlers(dp)
 
     await create_db(config=config)
+
     # start
     try:
         await dp.skip_updates()

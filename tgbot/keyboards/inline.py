@@ -6,7 +6,7 @@ from tgbot.misc.i18n import i18ns
 _ = i18ns.lazy_gettext
 
 
-async def lang_btns(back):
+def lang_btns(back):
     lang_btn = InlineKeyboardMarkup(row_with=1).add(InlineKeyboardButton("uz 🇺🇿", callback_data="uz"),
                                                     InlineKeyboardButton("ru 🇷🇺", callback_data="ru"),
                                                     InlineKeyboardButton("en 🇺🇸", callback_data="en"))
@@ -15,7 +15,7 @@ async def lang_btns(back):
     return lang_btn
 
 
-async def main_menu_btns(locale=False):
+def main_menu_btns(locale=False):
     main_menu_btn = InlineKeyboardMarkup(row_width=1)
     if locale:
         main_menu_btn.add(
@@ -30,8 +30,22 @@ async def main_menu_btns(locale=False):
     return main_menu_btn
 
 
-city_btn = InlineKeyboardMarkup(row_width=1).add(InlineKeyboardButton("Shahrisabz", callback_data="Shahrisabz"),
-                                                 InlineKeyboardButton("Qarshi", callback_data="Qarshi"),
+def markets_kb(markets):
+    market_kb = InlineKeyboardMarkup(row_width=3)
+    text = ""
+    for market in markets:
+        text += f"\n\n\n🆔 id: {market.id}\n🏢 Korxona nomi: {market.name_uz}\n📍 Faoliyat manzili: {market.address}\n🤵‍♂️ Faoliyat turi: {market.type}\n" \
+                f"📦 Faoliyat yo'nalishi: {market.activity}\n📱 Telefon raqam: {market.number}"
+        market_kb.insert(InlineKeyboardButton(market.id, callback_data=market.id))
+    market_kb.insert(InlineKeyboardButton(_("🔙 Orqaga"), callback_data="back"))
+    return market_kb, text
+
+
+city_btn = InlineKeyboardMarkup(row_width=1).add(InlineKeyboardButton("Shahrisabz t", callback_data="Shahrisabz t"),
+                                                 InlineKeyboardButton("Shahrisabz sh", callback_data="Shahrisabz sh"),
+                                                 InlineKeyboardButton("Qarshi t", callback_data="Qarshi t"),
+                                                 InlineKeyboardButton("Qarshi sh", callback_data="Qarshi sh"),
+                                                 InlineKeyboardButton("Qamashi", callback_data="Qamashi"),
                                                  InlineKeyboardButton("Koson", callback_data="Koson"),
                                                  InlineKeyboardButton("Ko'kdala", callback_data="Ko'kdala"),
                                                  InlineKeyboardButton("Mirishkor", callback_data="Mirishkor"),
@@ -40,6 +54,9 @@ city_btn = InlineKeyboardMarkup(row_width=1).add(InlineKeyboardButton("Shahrisab
                                                  InlineKeyboardButton("Chiroqchi", callback_data="Chiroqchi"),
                                                  InlineKeyboardButton("Yakkabog'", callback_data="Yakkabog'"),
                                                  InlineKeyboardButton("Kitob", callback_data="Kitob"),
+                                                 InlineKeyboardButton("Kasbi", callback_data="Kasbi"),
+                                                 InlineKeyboardButton("Guzor", callback_data="Guzor"),
+                                                 InlineKeyboardButton("Dehqonobod", callback_data="Dehqonobod"),
                                                  InlineKeyboardButton(_("🔙 Orqaga"), callback_data="back"))
 
 dist_pod_btn = InlineKeyboardMarkup(row_width=1).add(

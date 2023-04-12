@@ -18,6 +18,7 @@ class UserParamsState(StatesGroup):
 class UserSellerState(StatesGroup):
     get_region = State()
     get_address = State()
+    get_market = State()
 
 
 class UserDistState(StatesGroup):
