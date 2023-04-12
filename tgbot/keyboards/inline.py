@@ -41,14 +41,20 @@ def markets_kb(markets):
     return market_kb, text
 
 
+def quarters_kb(quarters):
+    quarter_kb = InlineKeyboardMarkup(row_width=2)
+    for quarter in quarters:
+        quarter_kb.insert(InlineKeyboardButton(quarter.name, callback_data=quarter.name))
+    quarter_kb.add(InlineKeyboardButton(_("🔙 Orqaga"), callback_data="back"))
+    return quarter_kb
+
+
 city_btn = InlineKeyboardMarkup(row_width=1).add(InlineKeyboardButton("Shahrisabz t", callback_data="Shahrisabz t"),
                                                  InlineKeyboardButton("Shahrisabz sh", callback_data="Shahrisabz sh"),
                                                  InlineKeyboardButton("Qarshi t", callback_data="Qarshi t"),
                                                  InlineKeyboardButton("Qarshi sh", callback_data="Qarshi sh"),
                                                  InlineKeyboardButton("Qamashi", callback_data="Qamashi"),
                                                  InlineKeyboardButton("Koson", callback_data="Koson"),
-                                                 InlineKeyboardButton("Ko'kdala", callback_data="Ko'kdala"),
-                                                 InlineKeyboardButton("Mirishkor", callback_data="Mirishkor"),
                                                  InlineKeyboardButton("Muborak", callback_data="Muborak"),
                                                  InlineKeyboardButton("Nishon", callback_data="Nishon"),
                                                  InlineKeyboardButton("Chiroqchi", callback_data="Chiroqchi"),

@@ -1,6 +1,6 @@
 from typing import List
 
-from tgbot.db.models import User, City, Market
+from tgbot.db.models import *
 
 
 async def create_user(tg_id, lang) -> User:
@@ -18,10 +18,13 @@ async def get_cities() -> List[City]:
     return await City.query.gino.all()
 
 
-async def get_markets(address, region) -> List[Market]:
+async def get_markets(address) -> List[Market]:
     return await Market.query.where(Market.address.ilike(f"%{address}%")).gino.all()
 
 
 async def get_market_id(market_id) -> Market:
     return await Market.query.where(Market.id == int(market_id)).gino.first()
 
+
+async def get_quarters(city) -> List[Quarter]:
+    return await Quarter.query.where(Quarter.name == city).gino.all()

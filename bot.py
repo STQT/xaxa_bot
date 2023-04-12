@@ -5,7 +5,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.contrib.fsm_storage.redis import RedisStorage2
 
-from datas import runn
+from datas import runn, ss_r
 from tgbot.config import load_config
 from tgbot.db.database import create_db
 from tgbot.filters.admin import AdminFilter
@@ -59,7 +59,7 @@ async def main():
     register_all_handlers(dp)
 
     await create_db(config=config)
- 
+    # await ss_r()
     # start
     try:
         await dp.skip_updates()

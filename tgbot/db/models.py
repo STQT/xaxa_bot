@@ -16,6 +16,16 @@ class User(db.Model):
     date = Column(DateTime, default=datetime.datetime.utcnow())
 
 
+class Quarter(db.Model):
+    __tablename__ = 'quarters'
+    query: sql.Select
+
+    id = Column(INTEGER(), primary_key=True, autoincrement=True)
+    name = Column(VARCHAR(200))
+    city = Column(VARCHAR(200))
+    date = Column(DateTime, default=datetime.datetime.utcnow())
+
+
 class City(db.Model):
     __tablename__ = 'citys'
     query: sql.Select

@@ -4,14 +4,12 @@ from aiogram import Dispatcher
 from aiogram.dispatcher import FSMContext
 from aiogram.types import Message, CallbackQuery
 
-from tgbot.db.db_cmds import create_user, get_markets, get_market_id
+from tgbot.db.db_cmds import *
 from tgbot.filters.back import BackFilter
-from tgbot.keyboards.inline import lang_btns, main_menu_btns, city_btn, dist_pod_btn, buis_dist_btn, buis_pod_btn, \
-    markets_kb
-from tgbot.keyboards.reply import contact_btn, remove_btn
+from tgbot.keyboards.inline import *
+from tgbot.keyboards.reply import *
 from tgbot.misc.i18n import i18ns
-from tgbot.misc.states import UserMenuState, UserParamsState, UserSellerState, UserDistState, UserBuisState, \
-    UserLangState
+from tgbot.misc.states import *
 
 _ = i18ns.gettext
 
@@ -69,37 +67,27 @@ async def get_code(m: Message, state: FSMContext):
 
 async def get_region(c: CallbackQuery, state: FSMContext):
     await state.update_data(region=c.data)
-    await c.message.edit_text(_("Iltimos manzilni kiriting"))
+    quarters = await get_quarters(c.data)
+    await c.message.edit_text(_("Iltimos mahallani tanlang"), reply_markup=quarters_kb(quarters))
+    await UserSellerState.next()
+
+
+async def get_quarter(c: CallbackQuery, state: FSMContext):
+    await state.update_data(address=c.data)
+    await c.message.edit_text("Manzilingizni yuboring")
     await UserSellerState.next()
 
 
 async def get_address(m: Message, state: FSMContext):
-    await state.update_data(address=m.text)
     data = await state.get_data()
-    markets = await get_markets(m.text, data["region"])
-    kb, text = markets_kb(markets)
-    if len(text) == 0:
-        return await m.answer("Hech nima topilmasi iltimos qayata urinib ko'ring")
-    if len(text) > 4096:
-        for x in range(0, len(text), 4096):
-            await m.answer(text[x:x+4096])
-    else:
-        await m.answer(text)
-    await m.answer("id raqam orqali tanlang", reply_markup=kb)
-    await UserSellerState.next()
-
-
-async def get_market(c: CallbackQuery, state: FSMContext):
-    data = await state.get_data()
-    config = c.bot.get("config")
-    market = await get_market_id(c.data)
-    await c.bot.send_message(config.tg_bot.group_ids, text=f"📋 <b>Magazinchidan sorov</b>.\n"
+    config = m.bot.get("config")
+    await m.bot.send_message(config.tg_bot.group_ids, text=f"📋 <b>Magazinchidan sorov</b>.\n"
                                                            f"👤 Ism: {data['name']}\n"
                                                            f"📱 Raqam: {data['number']}\n"
                                                            f"🏢 Tuman: {data['region']}\n"
-                                                           f"📍 Manzil: {data['address']}\n"
-                                                           f"🏪 Magazin: {market.name_uz}")
-    await c.message.edit_text(_("Tez orada agentimiz siz bilan bog'lanadi 👨‍💻"
+                                                           f"🏪 Mahalla: {data['address']}"
+                                                           f"📍 Manzil: {m.text}\n")
+    await m.answer(_("Tez orada agentimiz siz bilan bog'lanadi 👨‍💻"
                      "\nva sizning do'koningizga eng yaxshi mollar 📦"
                      "\nkelishini istasangiz botimizdan foydalaning 🤖"
                      "\nva kerakli bo'lgan zakazlarni qabul qiling! 📋"), reply_markup=main_menu_btns())
@@ -168,7 +156,7 @@ def register_user(dp: Dispatcher):
     dp.register_message_handler(get_code, state=UserParamsState.get_code)
     dp.register_callback_query_handler(get_region, BackFilter(), state=UserSellerState.get_region)
     dp.register_message_handler(get_address, state=UserSellerState.get_address)
-    dp.register_callback_query_handler(get_market, BackFilter(), state=UserSellerState.get_market)
+    dp.register_callback_query_handler(get_quarter, BackFilter(), state=UserSellerState.get_quarter)
     dp.register_message_handler(get_dist_type, state=UserDistState.get_type)
     dp.register_callback_query_handler(get_city, BackFilter(), state=UserDistState.get_region)
     dp.register_message_handler(get_buis_type, state=UserBuisState.get_type)
