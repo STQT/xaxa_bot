@@ -78,14 +78,14 @@ async def get_address(m: Message, state: FSMContext):
     data = await state.get_data()
     markets = await get_markets(m.text, data["region"])
     kb, text = markets_kb(markets)
+    if len(text) > 4096:
+    for x in range(0, len(text), 4096):
+        bot.send_message(message.chat.id, info[x:x+4096])
+    else:
+        bot.send_message(message.chat.id, info)
     if len(text) == 0:
         return await m.answer("Hech nima topilmasi iltimos qayata urinib ko'ring")
-    if len(text) > 4096:
-        for x in range(0, len(text), 4096):
-            await m.answer(text[x:x+4096])
-    else:
-        await m.answer(text)
-    await m.answer("id raqam orqali tanlang", reply_markup=kb)
+    await m.answer(text, reply_markup=kb)
     await UserSellerState.next()
 
 

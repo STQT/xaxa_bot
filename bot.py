@@ -19,7 +19,7 @@ from tgbot.misc.i18n import i18ns
 
 logger = logging.getLogger(__name__)
 
-DEBUG = False
+DEBUG = True
 
 
 def register_all_middlewares(dp, config):
@@ -49,7 +49,7 @@ async def main():
     config = load_config(".env")
 
     storage = RedisStorage2() if config.tg_bot.use_redis else MemoryStorage()
-    bot = Bot(token="5775894811:AAGDUsr0iS0uiZyVXrFxAK1oNL0E4WWKdgQ", parse_mode='HTML')
+    bot = Bot(token=config.tg_bot.token, parse_mode='HTML')
     dp = Dispatcher(bot, storage=storage)
 
     bot['config'] = config
@@ -59,7 +59,7 @@ async def main():
     register_all_handlers(dp)
 
     await create_db(config=config)
-
+ 
     # start
     try:
         await dp.skip_updates()

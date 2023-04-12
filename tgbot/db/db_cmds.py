@@ -19,7 +19,7 @@ async def get_cities() -> List[City]:
 
 
 async def get_markets(address, region) -> List[Market]:
-    return await Market.query.where(Market.address.like(f"%{address}%")).gino.all()
+    return await Market.query.where(Market.address.ilike(f"%{address}%")).gino.all()
 
 
 async def get_market_id(market_id) -> Market:
