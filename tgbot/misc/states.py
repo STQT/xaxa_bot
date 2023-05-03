@@ -20,7 +20,6 @@ class UserParamsState(StatesGroup):
 
 class UserSellerState(StatesGroup):
     get_address = State()
-    get_
     get_pay = State()
 
 
