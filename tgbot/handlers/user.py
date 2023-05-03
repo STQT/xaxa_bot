@@ -2,14 +2,15 @@ import random
 
 from aiogram import Dispatcher
 from aiogram.dispatcher import FSMContext
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message
 
 from tgbot.db.db_cmds import *
 from tgbot.filters.back import BackFilter
-from tgbot.keyboards.inline import *
+# from tgbot.keyboards.inline import *
 from tgbot.keyboards.reply import *
 from tgbot.misc.i18n import i18ns
 from tgbot.misc.states import *
+from tgbot.services.sms import send_code
 
 _ = i18ns.gettext
 
@@ -19,34 +20,36 @@ async def user_start(m: Message, status):
         await m.answer(_("Assalomu alaykum!\nIltimos tilni tanlang 👇"), reply_markup=lang_btns(False))
         await UserLangState.get_lang.set()
     else:
-        await m.answer(_("Assalomu alaykum siz kimsiz?"), reply_markup=main_menu_btns(False))
-        await UserMenuState.get_menu.set()
+        await m.answer(_("Qaysi viloyatdan distirbyutor qidiryapsiz? 👇"), reply_markup=citys_btn)
+        return await UserBuisState.get_region.set()
 
 
-async def get_lang(c: CallbackQuery):
-    await create_user(c.from_user.id, c.data)
-    await c.message.edit_text(_("Assalomu alaykum siz kimsiz?", locale=c.data),
-                              reply_markup=main_menu_btns(c.data))
+async def get_lang(m: Message, state: FSMContext):
+    lang = m.text[:2]
+    await state.update_data(lang=lang)
+    await m.answer(_("Assalomu alaykum siz kimsiz?", locale=lang), reply_markup=main_menu_btns(lang))
     await UserMenuState.get_menu.set()
 
 
-async def get_type(c: CallbackQuery, state: FSMContext):
-    await state.update_data(type=c.data)
-    await c.message.edit_text(_("Iltimos ismingizni kiriting!"))
+async def get_type(m: Message, state: FSMContext):
+    data = await state.get_data()
+    await state.update_data(type=m.text)
+    await m.answer(_("Iltimos ismingizni kiriting!", locale=data["lang"]), reply_markup=remove_btn)
     await UserParamsState.get_name.set()
 
 
 async def get_name(m: Message, state: FSMContext):
+    data = await state.get_data()
     await state.update_data(name=m.text)
-    await m.answer(_("Iltimos telefon raqamingizni kiriting 📲"), reply_markup=contact_btn)
+    await m.answer(_("Iltimos telefon raqamingizni kiriting 📲", locale=data["lang"]), reply_markup=contact_btn)
     await UserParamsState.next()
 
 
-async def get_phone(m: Message, state: FSMContext):
+async def get_phone(m: Message, state: FSMContext, config):
     code = random.randint(1000, 9999)
     await state.update_data(number=m.contact.phone_number, code=code)
+    await send_code(m.contact.phone_number, code, config)
     await m.answer(_("Iltimos telefon raqamingizga kelgan kodni kiriting 📥"), reply_markup=remove_btn)
-    await m.answer(text=str(code))
     await UserParamsState.next()
 
 
@@ -54,112 +57,157 @@ async def get_code(m: Message, state: FSMContext):
     data = await state.get_data()
     if str(data["code"]) != str(m.text):
         return await m.answer(_("Xato kod kiritildi 🚫"))
-    if data["type"] == "seller":
-        await m.answer(_("Sizning magaziningiz qaysi tumanda joylashgan? 🏬"), reply_markup=city_btn)
-        await UserSellerState.get_region.set()
-    elif data["type"] == "dist":
-        await m.answer(_("Siz qaysi sohada Distirbyutorsiz? 📋"))
-        await UserDistState.get_type.set()
+    if data["type"] == "Magazinchi 🙍‍♂️":
+        await m.answer(_("Sizning magaziningiz qaysi shaharda joylashgan? 🏬", locale=data["lang"]),
+                       reply_markup=citys_btn)
     else:
-        await m.answer(_("Siz qaysi sohada ishlab chiqarasiz? 🏭"))
-        await UserBuisState.get_type.set()
+        await m.answer(_("Qaysi viloyatda faoliyat yuritasiz? 🏭", locale=data["lang"]), reply_markup=citys_btn)
+    await UserParamsState.next()
 
 
-async def get_region(c: CallbackQuery, state: FSMContext):
-    await state.update_data(region=c.data)
-    quarters = await get_quarters(c.data)
-    await c.message.edit_text(_("Iltimos mahallani tanlang"), reply_markup=quarters_kb(quarters))
-    await UserSellerState.next()
+async def get_region(m: Message, state: FSMContext):
+    if m.text == "Qashqadaryo":
+        await state.update_data(region=m.text)
+        data = await state.get_data()
+        if data["type"] == "Magazinchi 🙍‍♂️":
+            await get_count(m.text, "Distirbyutor 🔎")
+            await m.answer(_("Tumanni tanlang 👇"), reply_markup=city_btn)
+            return await UserSellerState.get_address.set()
+        await m.answer(_("Sohani tanlang 👇", locale=data["lang"]), reply_markup=cats_kb)
+        return await UserParamsState.next()
+    else:
+        return await m.answer("Tez orada! 😃")
 
 
-async def get_quarter(c: CallbackQuery, state: FSMContext):
-    await state.update_data(address=c.data)
-    await c.message.edit_text("Manzilingizni yuboring")
-    await UserSellerState.next()
+async def get_sel_address(m: Message, state: FSMContext):
+    await state.update_data(sell_street=m.text)
+    await m.answer()
 
 
-async def get_address(m: Message, state: FSMContext):
+async def get_sel_buy(m: Message, state: FSMContext):
+    await update_user(m.from_user.id, "pro")
     data = await state.get_data()
-    config = m.bot.get("config")
-    await m.bot.send_message(config.tg_bot.group_ids, text=f"📋 <b>Magazinchidan sorov</b>.\n"
-                                                           f"👤 Ism: {data['name']}\n"
-                                                           f"📱 Raqam: {data['number']}\n"
-                                                           f"🏢 Tuman: {data['region']}\n"
-                                                           f"🏪 Mahalla: {data['address']}"
-                                                           f"📍 Manzil: {m.text}\n")
-    await m.answer(_("Tez orada agentimiz siz bilan bog'lanadi 👨‍💻"
-                     "\nva sizning do'koningizga eng yaxshi mollar 📦"
-                     "\nkelishini istasangiz botimizdan foydalaning 🤖"
-                     "\nva kerakli bo'lgan zakazlarni qabul qiling! 📋"), reply_markup=main_menu_btns())
-    await UserMenuState.get_menu.set()
+    await m.answer(_("Siz Pro potpiskaga azo bo'ldingiz!\n"))
+    await m.answer(_("{prod} soha bo'yicha Jamshid aka\n📲 Raqam: +98900000000\n🏬 Magazinlar: 10 ta\n"
+                     "📍 Manzil: Koson tumani, yangiariq ko'chasi").format(prod=data["buis_prod"]),
+                   reply_markup=buis_get_info_kb)
+    await UserBuisState.next()
+
+async def get_cat(m: Message, state: FSMContext):
+    data = await state.get_data()
+    await state.update_data(cat=m.text)
+    await m.answer(_("Sohani tanlang 👇", locale=data["lang"]), reply_markup=sub_cat_kb(m.text))
+    await UserParamsState.next()
 
 
-async def get_dist_type(m: Message, state: FSMContext):
-    await state.update_data(dist_type=m.text)
-    await m.answer(_("Qaysi shahar bilan qiziqmoqdasiz?"), reply_markup=city_btn)
-    await UserDistState.next()
+async def get_sub_cat(m: Message, state: FSMContext):
+    await state.update_data(sub_cat=m.text)
+    data = await state.get_data()
+    await m.answer(_("Sohani tanlang 👇", locale=data["lang"]), reply_markup=prod_cat_kb(m.text, data["cat"]))
+    if data["type"] == "Ishlab chiqaruvchi 🤵‍♂️":
+        return await UserBuisState.get_buis_prod.set()
+    return await UserDistState.get_prod.set()
 
 
-async def get_city(c: CallbackQuery, state: FSMContext):
-    await state.update_data(city=c.data)
-    text = ""
-    if c.data == 'Kitob':
-        text = "Bu do'kon kitob\ntuman asaka Mahalla fuqarolaridagi\n3 - tor ko'chada joylashgan.\nMagazinchi: G'aybulla aka\ntelefon raqami: +998995595353"
-    elif c.data == 'Qarshi':
-        text = "Bu do'kon kitob\ntuman asaka Mahalla fuqarolaridagi\n3 - tor ko'chada joylashgan.\nMagazinchi: Ahmad aka\ntelefon raqami: +998995595353"
-    elif c.data == 'Koson':
-        text = "Bu do'kon koson\ntuman asaka Mahalla fuqarolaridagi\n3 - tor ko'chada joylashgan.\nMagazinchi: Abduvali aka\ntelefon raqami: +998995595353"
-    elif c.data == "Ko'kdala":
-        text = "Bu do'kon kokdala\ntuman asaka Mahalla fuqarolaridagi\n3 - tor ko'chada joylashgan.\nMagazinchi: Qahhor aka\ntelefon raqami: +998995595353"
-    elif c.data == 'Mirishkor':
-        text = "Bu do'kon mirishkor\ntuman asaka Mahalla fuqarolaridagi\n3 - tor ko'chada joylashgan.\nMagazinchi: Doston aka\ntelefon raqami: +998995595353"
-    elif c.data == 'Muborak':
-        text = "Bu do'kon muborak\ntuman asaka Mahalla fuqarolaridagi\n3 - tor ko'chada joylashgan.\nMagazinchi: Faybulla aka\ntelefon raqami: +998995595353"
-    elif c.data == 'Nishon':
-        text = "Bu do'kon nishon\ntuman asaka Mahalla fuqarolaridagi\n3 - tor ko'chada joylashgan.\nMagazinchi: G'aybulla aka\ntelefon raqami: +998995595353"
-    elif c.data == 'Chiroqchi':
-        text = "Bu do'kon chiroqchi\ntuman asaka Mahalla fuqarolaridagi\n3 - tor ko'chada joylashgan.\nMagazinchi: Fathulla aka\ntelefon raqami: +998995595353"
-    elif c.data == 'Yakkabog':
-        text = "Bu do'kon yakkabog'\ntuman asaka Mahalla fuqarolaridagi\n3 - tor ko'chada joylashgan.\nMagazinchi: Aslan aka\ntelefon raqami: +998995595353"
-    elif c.data == 'Shaxriasabz t':
-        text = "Bu do'kon shaxrisabz\ntuman asaka Mahalla fuqarolaridagi\n3 - tor ko'chada joylashgan.\nMagazinchi: Bayroq aka\ntelefon raqami: +998995595353"
-    await c.message.edit_text(text=text, reply_markup=dist_pod_btn)
-    await UserDistState.next()
-
-
-async def get_buis_type(m: Message, state: FSMContext):
-    await state.update_data(buis_type=m.text)
-    await m.answer(f"{m.text} sohasi bo'yicha\nJamshid aka distirbyutor kuchli\nshu, insonga aloqaga chiqish uchun\nknopkani bosing",
-                   reply_markup=buis_dist_btn)
+async def get_prod_buis(m: Message, state: FSMContext):
+    data = await state.get_data()
+    await create_user(m.from_user.id, data["lang"], data["name"], data["number"], data["type"], data["region"], m.text)
+    await m.answer(_("Qaysi viloyatdan distribyuter qidiryapsiz?"), reply_markup=citys_btn)
     await UserBuisState.next()
 
 
-async def get_btn(c: CallbackQuery, state: FSMContext):
-    if c.data == "Jamshid":
-        await c.message.edit_text("Jamshid aka distirbyutorning raqami: +998995595353\nular 500 ta magazin bn ishlaydi, magazinlar qashqadaryo\nning kitob shahrida joylashgan")
-    else:
-        await c.message.edit_text("1. pechenie\n2. shokolad", reply_markup=buis_pod_btn)
+async def get_region_buis(m: Message, state: FSMContext):
+    if m.text != "Qashqadaryo":
+        return await m.answer("Tez orada! 😃")
+    await m.answer(_("Qaysi sohada?"), reply_markup=cats_kb)
+    await UserBuisState.get_cat.set()
 
 
-async def back(c: CallbackQuery):
-    await c.message.delete()
-    await c.message.answer(_("Assalomu alaykum siz kimsiz?"), reply_markup=main_menu_btns(False))
-    await UserMenuState.get_menu.set()
+async def get_buis_cat(m: Message, state: FSMContext):
+    await state.update_data(buis_cat=m.text)
+    await m.answer(_("Sohani tanlang 👇"), reply_markup=sub_cat_kb(m.text))
+    await UserBuisState.next()
+
+
+async def get_buis_sub_cat(m: Message, state: FSMContext):
+    data = await state.get_data()
+    await state.update_data(buis_sub_cat=m.text)
+    await m.answer(_("Sohani tanlang 👇"), reply_markup=prod_cat_kb(m.text, data["buis_cat"]))
+    await UserBuisState.next()
+
+
+async def get_buis_prod(m: Message, state: FSMContext, user):
+    data = await state.get_data()
+    if user.status == "basic":
+        await state.update_data(buis_prod=m.text)
+        await m.answer(f"{m.text} sohasi bo'yicha 50 ta distribyuter bor ularni ko'rish uchun PRO versiyani xarid qiling",
+                       reply_markup=buy_kb)
+        return await UserBuisState.next()
+    await m.answer(_("{prod} soha bo'yicha Jamshid aka\n📲 Raqam: +98900000000\n🏬 Magazinlar: 10 ta\n"
+                     "📍 Manzil: Koson tumani, yangiariq ko'chasi").format(prod=data["buis_prod"]),
+                   reply_markup=buis_get_info_kb)
+    await UserBuisState.get_info.set()
+
+
+async def get_buis_info(m: Message):
+    await m.answer(_("O'zingiz haqingizda ma'lumot qoldiring distirbyutorlarga ma'lumotlaringiz qiziq bo'lsa aloqaga "
+                     "chiqishadi! 👨‍💻"), reply_markup=remove_btn)
+    await UserBuisState.next()
+
+
+async def send_buis(m: Message, user, config):
+    await m.bot.send_message(chat_id=config.tg_bot.buis_ids, text=f"👤 Ismi: {user.name}\n📲 Raqam: {user.number}\n"
+                                                                  f"📦 Tovar: {user.product}\n🌆 Shahar: {user.region}\n"
+                                                                  f"💬 Ma'lumot: {m.text}")
+    await m.answer(_("So'rovingiz distribyuterlarga yetkazildi!"), reply_markup=citys_btn)
+    await UserBuisState.next()
+
+
+async def get_buy_buis(m: Message, state: FSMContext):
+    await update_user(m.from_user.id, "pro")
+    data = await state.get_data()
+    await m.answer(_("Siz Pro potpiskaga azo bo'ldingiz!\n"))
+    await m.answer(_("{prod} soha bo'yicha Jamshid aka\n📲 Raqam: +98900000000\n🏬 Magazinlar: 10 ta\n"
+                     "📍 Manzil: Koson tumani, yangiariq ko'chasi").format(prod=data["buis_prod"]), reply_markup=buis_get_info_kb)
+    await UserBuisState.next()
+
+
+async def back(m: Message, state: FSMContext):
+    data = await state.get_data()
+    state = await state.get_state()
+    if state == "UserParamsState:get_sub_cat":
+        await m.answer(_("Sohani tanlang 👇"), reply_markup=cats_kb)
+        return await UserParamsState.get_cat.set()
+    elif state == "UserBuisState:get_buis_prod":
+        await m.answer(_("Sohani tanlang 👇"), reply_markup=sub_cat_kb(data["cat"]))
+        return await UserParamsState.get_sub_cat.set()
+    elif state in ["UserBuisState:get_buy", "UserBuisState:get_cat"]:
+        await m.answer(_("Qaysi viloyatdan distribyuter qidiryapsiz?"), reply_markup=citys_btn)
+        return await UserBuisState.get_region.set()
+    elif state == "UserBuisState:get_sub_cat":
+        await m.answer(_("Sohani tanlang 👇"), reply_markup=cats_kb)
+        return await UserBuisState.get_cat.set()
+    elif state == "UserBuisState:get_prod":
+        await m.answer(_("Sohani tanlang 👇"), reply_markup=sub_cat_kb(data["buis_cat"]))
+        return await UserBuisState.get_sub_cat.set()
 
 
 def register_user(dp: Dispatcher):
     dp.register_message_handler(user_start, commands=["start"], state="*")
-    dp.register_callback_query_handler(get_lang, BackFilter(), state=UserLangState.get_lang)
-    dp.register_callback_query_handler(get_type, BackFilter(), state=UserMenuState.get_menu)
+    dp.register_message_handler(get_lang, BackFilter(), state=UserLangState.get_lang)
+    dp.register_message_handler(get_type, BackFilter(), state=UserMenuState.get_menu)
     dp.register_message_handler(get_name, state=UserParamsState.get_name)
     dp.register_message_handler(get_phone, content_types='contact', state=UserParamsState.get_phone)
     dp.register_message_handler(get_code, state=UserParamsState.get_code)
-    dp.register_callback_query_handler(get_region, BackFilter(), state=UserSellerState.get_region)
-    dp.register_message_handler(get_address, state=UserSellerState.get_address)
-    dp.register_callback_query_handler(get_quarter, BackFilter(), state=UserSellerState.get_quarter)
-    dp.register_message_handler(get_dist_type, state=UserDistState.get_type)
-    dp.register_callback_query_handler(get_city, BackFilter(), state=UserDistState.get_region)
-    dp.register_message_handler(get_buis_type, state=UserBuisState.get_type)
-    dp.register_callback_query_handler(get_btn, BackFilter(), state=UserBuisState.get_dist)
-    dp.register_callback_query_handler(back, state="*")
-
+    dp.register_message_handler(get_region, BackFilter(), state=UserParamsState.get_region)
+    dp.register_message_handler(get_cat, BackFilter(), state=UserParamsState.get_cat)
+    dp.register_message_handler(get_sub_cat, BackFilter(), state=UserParamsState.get_sub_cat)
+    dp.register_message_handler(get_prod_buis, BackFilter(), state=UserBuisState.get_buis_prod)
+    dp.register_message_handler(get_region_buis, BackFilter(), state=UserBuisState.get_region)
+    dp.register_message_handler(get_buis_cat, BackFilter(), state=UserBuisState.get_cat)
+    dp.register_message_handler(get_buis_sub_cat, BackFilter(), state=UserBuisState.get_sub_cat)
+    dp.register_message_handler(get_buis_prod, BackFilter(), state=UserBuisState.get_prod)
+    dp.register_message_handler(get_buy_buis, BackFilter(), state=UserBuisState.get_buy)
+    dp.register_message_handler(get_buis_info, BackFilter(), state=UserBuisState.get_info)
+    dp.register_message_handler(send_buis, BackFilter(), state=UserBuisState.get_text)
+    dp.register_message_handler(back, state="*")

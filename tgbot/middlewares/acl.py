@@ -13,6 +13,7 @@ class ACLMiddleware(BaseMiddleware):
             data['status'] = True
         else:
             data['user_lang'] = user_loc.lang
+            data['user'] = user_loc
             data['status'] = False
 
     async def on_pre_process_message(self, message: types.Message, data: dict):

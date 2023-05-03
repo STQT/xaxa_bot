@@ -13,6 +13,12 @@ class User(db.Model):
     tg_id = Column(BigInteger(), unique=True)
     lang = Column(VARCHAR(2))
     name = Column(VARCHAR(200))
+    number = Column(VARCHAR(20))
+    type = Column(VARCHAR(100))
+    status = Column(VARCHAR(50))
+    region = Column(VARCHAR(50))
+    street = Column(VARCHAR(200))
+    product = Column(VARCHAR(100))
     date = Column(DateTime, default=datetime.datetime.utcnow())
 
 

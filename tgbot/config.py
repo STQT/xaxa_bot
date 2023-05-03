@@ -16,13 +16,18 @@ class DbConfig:
 class TgBot:
     token: str
     admin_ids: list
-    group_ids: int
+    buis_ids: int
+    dist_ids: int
+    sell_ids: int
     use_redis: bool
 
 
 @dataclass
 class Miscellaneous:
     sentry_sdk: str
+    sms_url: str
+    sms_login: str
+    sms_pass: str
 
 
 @dataclass
@@ -40,7 +45,9 @@ def load_config(path: str = None):
         tg_bot=TgBot(
             token=env.str("BOT_TOKEN"),
             admin_ids=list(map(int, env.list("ADMINS"))),
-            group_ids=env.int("GROUP"),
+            buis_ids=env.int("BUIS_GROUP"),
+            dist_ids=env.int("DIST_GROUP"),
+            sell_ids=env.int("SELL_GROUP"),
             use_redis=env.bool("USE_REDIS"),
         ),
         db=DbConfig(
@@ -50,7 +57,10 @@ def load_config(path: str = None):
             database=env.str('DB_NAME')
         ),
         misc=Miscellaneous(
-            sentry_sdk=env.str('SENTRY_SDK')
+            sentry_sdk=env.str('SENTRY_SDK'),
+            sms_url=env.str('SMS_URL'),
+            sms_login=env.str('SMS_LOGIN'),
+            sms_pass=env.str('SMS_PASS')
         )
     )
 

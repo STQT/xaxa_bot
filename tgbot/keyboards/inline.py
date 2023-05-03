@@ -1,6 +1,7 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from tgbot.db.db_api import get_prod_cats, get_prods
+from tgbot.keyboards.text import textss
 from tgbot.misc.i18n import i18ns
 
 _ = i18ns.lazy_gettext
@@ -65,6 +66,20 @@ city_btn = InlineKeyboardMarkup(row_width=1).add(InlineKeyboardButton("Shahrisab
                                                  InlineKeyboardButton("Dehqonobod", callback_data="Dehqonobod"),
                                                  InlineKeyboardButton(_("🔙 Orqaga"), callback_data="back"))
 
+citys_btn = InlineKeyboardMarkup(row_width=1).add(InlineKeyboardButton("Toshkent sh", callback_data="Toshkent sh"),
+                                                  InlineKeyboardButton("Toshkent v", callback_data="Toshkent v"),
+                                                  InlineKeyboardButton("Andijon", callback_data="Andijot"),
+                                                  InlineKeyboardButton("Buxoro", callback_data="Buxoro"),
+                                                  InlineKeyboardButton("Farg'ona", callback_data="Farg'ona"),
+                                                  InlineKeyboardButton("Jizzax", callback_data="Jizzax"),
+                                                  InlineKeyboardButton("Namangan", callback_data="Namnagan"),
+                                                  InlineKeyboardButton("Navoiy", callback_data="Navoiy"),
+                                                  InlineKeyboardButton("Qashqadaryo", callback_data="Qashqadaryo"),
+                                                  InlineKeyboardButton("Qoraqalpogʻiston R", callback_data="Qoraqalpogʻiston R"),
+                                                  InlineKeyboardButton("Samarqand", callback_data="Samarqand"),
+                                                  InlineKeyboardButton("Sirdaryo", callback_data="Sirdaryo"),
+                                                  InlineKeyboardButton("Surxondaryo", callback_data="Surxondaryo"))
+
 dist_pod_btn = InlineKeyboardMarkup(row_width=1).add(
     InlineKeyboardButton("Boshqa magazinlar", callback_data="Shahrisabawdz"),
     InlineKeyboardButton("Top 10 magazinlar", callback_data="Shahrisabasdez"),
@@ -81,3 +96,43 @@ buis_pod_btn = InlineKeyboardMarkup(row_width=1).add(
     InlineKeyboardButton("Pechenie", callback_data="pecheniex"),
     InlineKeyboardButton("Shokolad", callback_data="shokolad"),
     InlineKeyboardButton(_("🔙 Orqaga"), callback_data="back"))
+
+cats_kb = InlineKeyboardMarkup(row_width=1).add(
+    InlineKeyboardButton("Oziq - ovqat maxsulotlari", callback_data="food"),
+    InlineKeyboardButton("Go'zallik", callback_data="beauty"),
+    InlineKeyboardButton("Maishy kimyoviy moddalar", callback_data="chemist"),
+    InlineKeyboardButton("Hayvonlar uchun maxsulotlar", callback_data="animals"))
+
+
+def sub_cat_kb(text):
+    sub_cats_kb = InlineKeyboardMarkup(row_width=1)
+    for i in textss[text]:
+        sub_cats_kb.insert(InlineKeyboardButton(i, callback_data=i))
+    return sub_cats_kb
+
+
+def prod_cat_kb(text, cat):
+    prod_cats_kb = InlineKeyboardMarkup(row_width=1)
+    for i in textss[cat][text]:
+        prod_cats_kb.insert(InlineKeyboardButton(i, callback_data=i))
+    return prod_cats_kb
+
+
+food_cats_kb = InlineKeyboardMarkup(row_width=1).add(
+    InlineKeyboardButton("Bakaleya", callback_data="bakaleya"),
+    InlineKeyboardButton("Issiq ichimlikalr", callback_data="tea"),
+    InlineKeyboardButton("Shirinliklar", callback_data="sweets"),
+    InlineKeyboardButton("Quriq mevalar", callback_data="dry"),
+    InlineKeyboardButton("Shirin konservalar", callback_data="sweet cons"),
+    InlineKeyboardButton("Snelklar", callback_data="snacks"),
+    InlineKeyboardButton("Bolalar ovqati", callback_data="children food"),
+    InlineKeyboardButton("Sog'lom ovqatlanish", callback_data="healthy"),
+    InlineKeyboardButton("Sut va sut maxsulotlari", callback_data="milk"),
+    InlineKeyboardButton("Non va non maxsulotlari", callback_data="bred"),
+    InlineKeyboardButton("Yarim tayyor maxsulotlar", callback_data="half"),
+)
+
+buy_kb = InlineKeyboardMarkup(row_width=1).add(
+    InlineKeyboardButton("Pay me", callback_data="pay me"),
+    InlineKeyboardButton("Click", callback_data="click"))
+
