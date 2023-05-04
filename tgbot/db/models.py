@@ -58,3 +58,5 @@ class Market(db.Model):
     number = Column(VARCHAR(30))
     date = Column(DateTime, default=datetime.datetime.utcnow())
 
+
+

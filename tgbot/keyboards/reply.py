@@ -134,18 +134,25 @@ food_cats_kb = ReplyKeyboardMarkup(resize_keyboard=True).add(
     KeyboardButton("Shirinliklar"),
     KeyboardButton("Quriq mevalar"),
     KeyboardButton("Shirin konservalar"),
-    KeyboardButton("Snelklar"),
+    KeyboardButton("Sneklar"),
     KeyboardButton("Bolalar ovqati"),
     KeyboardButton("Sog'lom ovqatlanish"),
     KeyboardButton("Sut va sut maxsulotlari"),
     KeyboardButton("Non va non maxsulotlari"),
     KeyboardButton("Yarim tayyor maxsulotlar"))
 
-buy_kb = ReplyKeyboardMarkup(resize_keyboard=True).add(
+buy_kb = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True).add(
     KeyboardButton("Pay me"),
-    KeyboardButton("Click"))
+    KeyboardButton(_("🔙 Orqaga")))
 
 buis_get_info_kb = ReplyKeyboardMarkup(resize_keyboard=True).add(
     KeyboardButton(_("Qaysi distirbyutorga sizning sohangiz kerak")),
     KeyboardButton(_("🔙 Orqaga")))
+
+
+def buis_pro(res):
+    buis_pro_kb = ReplyKeyboardMarkup(resize_keyboard=True, row_width=3).add(KeyboardButton(_("🔙 Orqaga")))
+    for i in res:
+        buis_pro_kb.insert(KeyboardButton(f"{i.id}. {i.name}"))
+    return buis_pro_kb
 

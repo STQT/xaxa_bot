@@ -6,7 +6,7 @@ from gino import Gino
 from gino.schema import GinoSchemaVisitor
 
 from tgbot.config import load_config
-from tgbot.db.models import Market, Quarter
+from tgbot.db.models import Market, Quarter, User
 
 config = load_config(".env")
 
@@ -29,3 +29,4 @@ async def ss_r():
     for i in range(1, row_count + 1):
         print(f"{i}.{sheet[f'A{i}'].value} {sheet[f'B{i}'].value}")
         await Quarter.create(name=str(sheet[f"A{i}"].value), city=str(sheet[f"B{i}"].value))
+

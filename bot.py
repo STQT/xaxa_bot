@@ -8,11 +8,14 @@ from aiogram.contrib.fsm_storage.redis import RedisStorage2
 from datas import runn, ss_r
 from tgbot.config import load_config
 from tgbot.db.database import create_db
+from tgbot.db.models import User
 from tgbot.filters.admin import AdminFilter
 from tgbot.filters.back import BackFilter
 from tgbot.handlers.admin import register_admin
 from tgbot.handlers.echo import register_echo
-from tgbot.handlers.user import register_user
+from tgbot.handlers.buis import register_buis
+from tgbot.handlers.register import register_reg
+from tgbot.handlers.seller import register_seller
 from tgbot.middlewares.acl import ACLMiddleware
 from tgbot.middlewares.environment import EnvironmentMiddleware
 from tgbot.misc.i18n import i18ns
@@ -35,7 +38,9 @@ def register_all_filters(dp):
 
 def register_all_handlers(dp):
     register_admin(dp)
-    register_user(dp)
+    register_reg(dp)
+    register_buis(dp)
+    register_seller(dp)
     if DEBUG:
         register_echo(dp)
 
@@ -61,6 +66,11 @@ async def main():
     await create_db(config=config)
     # await ss_r()
     # start
+
+    # for i in range(1, 15):
+    #     await User.create(tg_id=i, lang="uz", name=f"{i}Faza", number=str(i), type="Distirbyutor 🔎", status="basic",
+    #                       region="Qashqadaryo", street="jararo", product="Laklar")
+
     try:
         await dp.skip_updates()
         await dp.start_polling()
