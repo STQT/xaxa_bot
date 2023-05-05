@@ -10,8 +10,6 @@ contact_btn = ReplyKeyboardMarkup(resize_keyboard=True).add(
 
 remove_btn = ReplyKeyboardRemove()
 
-_ = i18ns.lazy_gettext
-
 
 def lang_btns(back):
     lang_btn = ReplyKeyboardMarkup(resize_keyboard=True).add(KeyboardButton("uz 🇺🇿"),
@@ -22,20 +20,19 @@ def lang_btns(back):
     return lang_btn
 
 
-def main_menu_btns(locale=False):
-    main_menu_btn = ReplyKeyboardMarkup(resize_keyboard=True)
-
-    if locale:
-        main_menu_btn.add(
-            KeyboardButton(_("Ishlab chiqaruvchi 🤵‍♂️", locale=locale)),
-            KeyboardButton(_("Distirbyutor 🔎", locale=locale)),
-            KeyboardButton(_("Magazinchi 🙍‍♂️", locale=locale)))
-    else:
-        main_menu_btn.add(
-            KeyboardButton(_("Ishlab chiqaruvchi 🤵‍♂️")),
-            KeyboardButton(_("Distirbyutor 🔎")),
-            KeyboardButton(_("Magazinchi 🙍‍♂️")))
+def main_menu_btns(locale=None):
+    main_menu_btn = ReplyKeyboardMarkup(resize_keyboard=True).add(
+        KeyboardButton(_("Ishlab chiqaruvchi 🤵‍♂️", locale=locale)),
+        KeyboardButton(_("Distirbyutor 🔎", locale=locale)),
+        KeyboardButton(_("Magazinchi 🙍‍♂️", locale=locale)))
     return main_menu_btn
+
+
+def industry_kb(industries, lang):
+    industry_btn = ReplyKeyboardMarkup(resize_keyboard=True, row_width=1)
+    for industry in industries:
+        industry_btn.insert(industry[f"name_{lang}"])
+    return industry_btn
 
 
 def markets_kb(markets):
@@ -57,35 +54,35 @@ def quarters_kb(quarters):
     return quarter_kb
 
 
-city_btn = ReplyKeyboardMarkup(resize_keyboard=True).add(KeyboardButton("Shahrisabz t"),
-                                                         KeyboardButton("Shahrisabz sh"),
-                                                         KeyboardButton("Qarshi t"),
-                                                         KeyboardButton("Qarshi sh"),
-                                                         KeyboardButton("Qamashi"),
-                                                         KeyboardButton("Koson"),
-                                                         KeyboardButton("Muborak"),
-                                                         KeyboardButton("Nishon"),
-                                                         KeyboardButton("Chiroqchi"),
-                                                         KeyboardButton("Yakkabog'"),
-                                                         KeyboardButton("Kitob"),
-                                                         KeyboardButton("Kasbi"),
-                                                         KeyboardButton("Guzor"),
-                                                         KeyboardButton("Dehqonobod"),
-                                                         KeyboardButton(_("🔙 Orqaga")))
+region_btn = ReplyKeyboardMarkup(resize_keyboard=True).add(KeyboardButton(_("Shahrisabz t")),
+                                                           KeyboardButton(_("Shahrisabz sh")),
+                                                           KeyboardButton(_("Qarshi t")),
+                                                           KeyboardButton(_("Qarshi sh")),
+                                                           KeyboardButton(_("Qamashi")),
+                                                           KeyboardButton(_("Koson")),
+                                                           KeyboardButton(_("Muborak")),
+                                                           KeyboardButton(_("Nishon")),
+                                                           KeyboardButton(_("Chiroqchi")),
+                                                           KeyboardButton(_("Yakkabog'")),
+                                                           KeyboardButton(_("Kitob")),
+                                                           KeyboardButton(_("Kasbi")),
+                                                           KeyboardButton(_("Guzor")),
+                                                           KeyboardButton(_("Dehqonobod")),
+                                                           KeyboardButton(_("🔙 Orqaga")))
 
-citys_btn = ReplyKeyboardMarkup(resize_keyboard=True).add(KeyboardButton("Toshkent sh"),
-                                                          KeyboardButton("Toshkent v"),
-                                                          KeyboardButton("Andijon"),
-                                                          KeyboardButton("Buxoro"),
-                                                          KeyboardButton("Farg'ona"),
-                                                          KeyboardButton("Jizzax"),
-                                                          KeyboardButton("Namangan"),
-                                                          KeyboardButton("Navoiy"),
-                                                          KeyboardButton("Qashqadaryo"),
-                                                          KeyboardButton("Qoraqalpogʻiston R", ),
-                                                          KeyboardButton("Samarqand"),
-                                                          KeyboardButton("Sirdaryo"),
-                                                          KeyboardButton("Surxondaryo"))
+city_btn = ReplyKeyboardMarkup(resize_keyboard=True).add(KeyboardButton(_("Toshkent sh")),
+                                                         KeyboardButton(_("Toshkent v")),
+                                                         KeyboardButton(_("Andijon")),
+                                                         KeyboardButton(_("Buxoro")),
+                                                         KeyboardButton(_("Farg'ona")),
+                                                         KeyboardButton(_("Jizzax")),
+                                                         KeyboardButton(_("Namangan")),
+                                                         KeyboardButton(_("Navoiy")),
+                                                         KeyboardButton(_("Qashqadaryo")),
+                                                         KeyboardButton(_("Qoraqalpogʻiston R", )),
+                                                         KeyboardButton(_("Samarqand")),
+                                                         KeyboardButton(_("Sirdaryo")),
+                                                         KeyboardButton(_("Surxondaryo")))
 
 dist_pod_btn = ReplyKeyboardMarkup(resize_keyboard=True).add(
     KeyboardButton("Boshqa magazinlar"),
@@ -155,4 +152,3 @@ def buis_pro(res):
     for i in res:
         buis_pro_kb.insert(KeyboardButton(f"{i.id}. {i.name}"))
     return buis_pro_kb
-

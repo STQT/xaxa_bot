@@ -11,15 +11,7 @@ from tgbot.misc.states import *
 _ = i18ns.gettext
 
 
-async def get_sell_region(m: Message, state: FSMContext):
-    print("adaeda")
-    data = await state.get_data()
-    await state.update_data(region=m.text)
-    await m.answer(_("Do'koningiz qaysi tumanda joylashgan?", locale=data["lang"]), reply_markup=city_btn)
-    await UserSellerState.next()
-
-
-async def get_sel_address(m: Message, state: FSMContext):
+async def get_sell_address(m: Message, state: FSMContext):
     data = await state.get_data()
     await state.update_data(street=m.text)
     await create_user(tg_id=m.from_user.id, name=data["name"], lang=data["lang"], number=data["number"],
@@ -61,8 +53,7 @@ async def success_payment(m: Message, state: FSMContext):
 
 
 def register_seller(dp: Dispatcher):
-    dp.register_message_handler(get_sell_region, state="*")
-    dp.register_message_handler(get_sel_address, state=UserSellerState.get_address)
+    dp.register_message_handler(get_sell_address, state=UserSellerState.get_street)
     dp.register_pre_checkout_query_handler(pre_checkout_query, state=UserSellerState.get_pay)
     dp.register_message_handler(success_payment, content_types=ContentTypes.SUCCESSFUL_PAYMENT,
                                 state=UserSellerState.get_success)

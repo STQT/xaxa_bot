@@ -4,7 +4,8 @@ from aiogram import Dispatcher
 from aiogram.dispatcher import FSMContext
 from aiogram.types import Message
 
-from tgbot.db.db_cmds import get_user
+from tgbot.db.db_api import create_user, get_industries
+from tgbot.db.db_api import get_user
 from tgbot.filters.back import BackFilter
 from tgbot.keyboards.reply import *
 from tgbot.misc.i18n import i18ns
@@ -14,21 +15,22 @@ from tgbot.services.sms import send_code
 _ = i18ns.gettext
 
 
-async def user_start(m: Message, status):
+async def user_start(m: Message, status, config):
     if status:
         await m.answer(_("Assalomu alaykum!\nIltimos tilni tanlang 👇"), reply_markup=lang_btns(False))
         await UserLangState.get_lang.set()
     else:
-        user = await get_user(m.from_user.id)
-        if user.type == "Ishlab chiqaruvchi 🤵‍♂️":
-            await m.answer(_("Qaysi viloyatdan distirbyutor qidiryapsiz? 👇"), reply_markup=citys_btn)
+        user = await get_user(m.from_user.id, config)
+        if user["user_type"] == "businessman":
+
+            await m.answer(_("Qaysi viloyatdan distirbyutor qidiryapsiz? 👇"), reply_markup=city_btn)
             return await UserBuisState.get_interested_region.set()
-        elif user.type == "Distirbyutor 🔎":
-            await m.answer(_("Qaysi viloyat sizga qiziq?"), reply_markup=citys_btn)
-            return await UserDistState.get_region.set()
+        elif user["user_type"] == "distributor":
+            await m.answer(_("Qaysi viloyat sizga qiziq?"), reply_markup=city_btn)
+            return await UserDistState.get_industry.set()
         else:
-            await m.answer(_("Qaysi viloyatdan distribyuter sizga qiziq?"), reply_markup=citys_btn)
-            return await UserSellerState.get_region.set()
+            await m.answer(_("Qaysi viloyatdan distribyuter sizga qiziq?"), reply_markup=city_btn)
+            return await UserSellerState.get_street.set()
 
 
 async def get_lang(m: Message, state: FSMContext):
@@ -66,12 +68,34 @@ async def get_code(m: Message, state: FSMContext):
         return await m.answer(_("Xato kod kiritildi 🚫"))
     if data["type"] == "Magazinchi 🙍‍♂️":
         await m.answer(_("Sizning magaziningiz qaysi shaharda joylashgan? 🏬", locale=data["lang"]),
-                       reply_markup=citys_btn)
-        return await UserSellerState.get_region.set()
-    await m.answer(_("Qaysi viloyatda faoliyat yuritasiz? 🏭", locale=data["lang"]), reply_markup=citys_btn)
-    if data["type"] == "Distirbyutor 🔎":
-        return await UserDistState.get_region.set()
-    return await UserBuisState.get_region.set()
+                       reply_markup=city_btn)
+    await m.answer(_("Qaysi viloyatda faoliyat yuritasiz? 🏭", locale=data["lang"]), reply_markup=city_btn)
+    await UserParamsState.next()
+
+
+async def get_region(m: Message, state: FSMContext, config):
+    if m.text == "Qashqadaryo":
+        data = await state.get_data()
+        if data["type"] == "Ishlab chiqaruvchi 🤵‍♂️":
+            user_type = "businessman"
+        elif data["type"] == "Distirbyutor 🔎":
+            user_type = "distributor"
+        else:
+            user_type = "magazin"
+        user = await create_user(m.from_user.id, data["name"], data["lang"], data["number"], user_type, m.text, config)
+        mess, kb = "", ""
+        industry = await get_industries(config)
+        if data["type"] in ["Ishlab chiqaruvchi 🤵‍♂️"]:
+            mess, kb = "Siz qaysi sohada ishlab chiqarasiz ?", industry_kb(industry, data["lang"])
+            await UserBuisState.get_industry.set()
+        elif data["type"] in ["Distirbyutor 🔎"]:
+            mess, kb = "Siz qaysi sohada distirbyutersiz ?",  industry_kb(industry, data["lang"])
+            await UserDistState.get_industry.set()
+        elif data["type"] in ["Magazinchi 🙍‍♂️"]:
+            mess, kb = "Dokoningiz qaysi tumanda joylashgan ?", region_btn
+            await UserSellerState.get_street.set()
+        await m.answer(mess, reply_markup=kb)
+    return await m.answer("Tez orada! 😃")
 
 
 def register_reg(dp: Dispatcher):
@@ -81,3 +105,4 @@ def register_reg(dp: Dispatcher):
     dp.register_message_handler(get_name, state=UserParamsState.get_name)
     dp.register_message_handler(get_phone, content_types='contact', state=UserParamsState.get_phone)
     dp.register_message_handler(get_code, state=UserParamsState.get_code)
+    dp.register_message_handler(get_region, state=UserParamsState.get_region)

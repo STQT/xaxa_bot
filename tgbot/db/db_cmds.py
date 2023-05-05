@@ -13,6 +13,7 @@ async def update_user(tg_id, status) -> None:
     await user.update(status=status).apply()
 
 
+
 async def get_count(product, type, region) -> List[User]:
     return await User.query.where(User.product == product).where(User.type == type).where(User.region == region).gino.all()
 

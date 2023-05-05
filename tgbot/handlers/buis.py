@@ -2,7 +2,7 @@ from aiogram import Dispatcher
 from aiogram.dispatcher import FSMContext
 from aiogram.types import Message, LabeledPrice, PreCheckoutQuery, ContentType
 
-from tgbot.db.db_cmds import *
+from tgbot.db.db_api import *
 from tgbot.filters.back import BackFilter
 from tgbot.keyboards.reply import *
 from tgbot.misc.i18n import i18ns
@@ -11,24 +11,14 @@ from tgbot.misc.states import *
 _ = i18ns.gettext
 
 
-async def get_buis_region(m: Message, state: FSMContext):
-    if m.text == "Qashqadaryo":
-        await state.update_data(region=m.text)
-        data = await state.get_data()
-        await m.answer(_("Sohani tanlang 👇", locale=data["lang"]), reply_markup=cats_kb)
-        return await UserBuisState.next()
-    else:
-        return await m.answer("Tez orada! 😃")
-
-
-async def get_buis_cat(m: Message, state: FSMContext):
+async def get_buis_industry(m: Message, state: FSMContext):
     data = await state.get_data()
     await state.update_data(cat=m.text)
     await m.answer(_("Sohani tanlang 👇", locale=data["lang"]), reply_markup=sub_cat_kb(m.text))
     await UserBuisState.next()
 
 
-async def get_buis_sub_cat(m: Message, state: FSMContext):
+async def get_buis_sub_industry(m: Message, state: FSMContext):
     await state.update_data(sub_cat=m.text)
     data = await state.get_data()
     await m.answer(_("Sohani tanlang 👇", locale=data["lang"]), reply_markup=prod_cat_kb(m.text, data["cat"]))
@@ -37,8 +27,8 @@ async def get_buis_sub_cat(m: Message, state: FSMContext):
 
 async def get_buis_prod(m: Message, state: FSMContext):
     data = await state.get_data()
-    await create_user(tg_id=m.from_user.id, lang=data["lang"], name=data["name"], number=data["number"],
-                      us_type=data["type"], region=data["region"], product=m.text)
+    await pre_register_user(tg_id=m.from_user.id, cat=data["lang"], name=data["name"], number=data["number"],
+                            us_type=data["type"], region=data["region"], product=m.text)
     await m.answer(_("Qaysi viloyatdan distribyuter qidiryapsiz?"), reply_markup=citys_btn)
     await UserBuisState.next()
 
@@ -164,9 +154,8 @@ async def back(m: Message, state: FSMContext):
 
 
 def register_buis(dp: Dispatcher):
-    dp.register_message_handler(get_buis_region, BackFilter(), state=UserBuisState.get_region)
-    dp.register_message_handler(get_buis_cat, BackFilter(), state=UserBuisState.get_cat)
-    dp.register_message_handler(get_buis_sub_cat, BackFilter(), state=UserBuisState.get_sub_cat)
+    dp.register_message_handler(get_buis_industry, BackFilter(), state=UserBuisState.get_industry)
+    dp.register_message_handler(get_buis_sub_industry, BackFilter(), state=UserBuisState.get_sub_cat)
     dp.register_message_handler(get_buis_prod, BackFilter(), state=UserBuisState.get_prod)
     dp.register_message_handler(get_interested_region, BackFilter(), state=UserBuisState.get_interested_region)
     dp.register_message_handler(get_interested_cat, BackFilter(), state=UserBuisState.get_interested_cat)

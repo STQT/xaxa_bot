@@ -1,16 +1,38 @@
+from typing import List
+
 import aiohttp
 
 
 async def get_user(user_id, config):
     async with aiohttp.ClientSession() as session:
-        async with session.get(url=f"{config.db.database_url}user/update/{user_id}") as response:
+        async with session.get(url=f"{config.db.database_url}users/{user_id}") as response:
             return await response.json()
 
 
-async def create_user(user_id, user_lang, config):
+async def create_user(tg_id, name, user_lang, user_phone, user_type, region, config):
     async with aiohttp.ClientSession() as session:
-        async with session.post(url=f"{config.db.database_url}user/create/",
-                                data={"tg_id": user_id, "user_lang": user_lang}) as response:
+        headers = {"Authorization": "Token 4ffe410d52f954ad113011c2a64cd3b3aace4ba3"}
+        async with session.post(headers=headers,
+                                url=f"{config.db.database_url}create-user/",
+                                json={"tg_id": tg_id, "tg_name": name, "lang": user_lang, "phone": user_phone,
+                                      "user_type": user_type,
+                                      "region": region}) as response:
+            if response.status == 201:
+                return await response.json()
+            return False
+
+
+async def pre_register_user(tg_id, region="dwd", category="fe", sub_category, config):
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url=f"{config.db.database_url}users",
+                                data={"tg_id": tg_id, "lang": user_lang, "phone": user_phone, "user_type": user_type})\
+                as response:
+            return await response.json()
+
+
+async def get_industries(config) -> List:
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url=f"{config.db.database_url}categories") as response:
             return await response.json()
 
 

@@ -40,7 +40,7 @@ def register_all_handlers(dp):
     register_admin(dp)
     register_reg(dp)
     register_buis(dp)
-    register_seller(dp)
+    # register_seller(dp)
     if DEBUG:
         register_echo(dp)
 
@@ -63,7 +63,7 @@ async def main():
     register_all_filters(dp)
     register_all_handlers(dp)
 
-    await create_db(config=config)
+    # await create_db(config=config)
     # await ss_r()
     # start
 

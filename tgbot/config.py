@@ -10,6 +10,7 @@ class DbConfig:
     password: str
     user: str
     database: str
+    database_url: str
 
 
 @dataclass
@@ -56,7 +57,8 @@ def load_config(path: str = None):
             host=env.str('DB_HOST'),
             password=env.str('DB_PASS'),
             user=env.str('DB_USER'),
-            database=env.str('DB_NAME')
+            database=env.str('DB_NAME'),
+            database_url=env.str('DB_URL')
         ),
         misc=Miscellaneous(
             payme=env.str('PAYME'),
