@@ -2,7 +2,7 @@ from aiogram import Dispatcher
 from aiogram.dispatcher import FSMContext
 from aiogram.types import Message, LabeledPrice, PreCheckoutQuery, ContentTypes
 
-from tgbot.db.db_cmds import *
+from tgbot.db.db_api import *
 from tgbot.filters.back import BackFilter
 from tgbot.keyboards.reply import *
 from tgbot.misc.i18n import i18ns
@@ -11,14 +11,18 @@ from tgbot.misc.states import *
 _ = i18ns.gettext
 
 
-async def get_sell_address(m: Message, state: FSMContext):
-    data = await state.get_data()
+async def get_sell_address(m: Message, state: FSMContext, config):
+    json_data = {
+        "tg_id": m.from_user.id,
+        "tg_name": m.from_user.full_name,
+        "distreet": m.text,
+        "city": m.text,
+    }
     await state.update_data(street=m.text)
-    await create_user(tg_id=m.from_user.id, name=data["name"], lang=data["lang"], number=data["number"],
-                      us_type="Magazinchi 🙍‍♂️", region=data["region"], street=m.text)
-    res = await get_count_dist(data["region"], m.text)
+    await pre_register_user(config, user_type="magazin", data=json_data)
+    # res = await get_count_dist(data["region"], m.text)
     await m.answer(_("Distribyutrerlar soni {count} ta.\nTo'liq ma'lunot olish uchun Pro versiya harid qiling").
-                   format(count=len(res)), reply_markup=buy_kb)
+                   format(count=0), reply_markup=buy_kb)
     await UserSellerState.next()
 
 

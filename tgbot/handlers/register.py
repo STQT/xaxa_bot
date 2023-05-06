@@ -4,7 +4,7 @@ from aiogram import Dispatcher
 from aiogram.dispatcher import FSMContext
 from aiogram.types import Message
 
-from tgbot.db.db_api import create_user, get_industries
+from tgbot.db.db_api import create_user, get_industries, check_user, get_count
 from tgbot.db.db_api import get_user
 from tgbot.filters.back import BackFilter
 from tgbot.keyboards.reply import *
@@ -21,16 +21,32 @@ async def user_start(m: Message, status, config):
         await UserLangState.get_lang.set()
     else:
         user = await get_user(m.from_user.id, config)
+        industries = await get_industries(config, user["lang"])
         if user["user_type"] == "businessman":
-
-            await m.answer(_("Qaysi viloyatdan distirbyutor qidiryapsiz? 👇"), reply_markup=city_btn)
-            return await UserBuisState.get_interested_region.set()
+            if user["is_registered"]:
+                await m.answer(_("Qaysi viloyatdan distirbyutor qidiryapsiz? 👇"), reply_markup=city_btn)
+                return await UserBuisState.get_interested_region.set()
+            await m.answer(_("Siz qaysi sohada ishlab chiqarasiz? 👇"),
+                           reply_markup=industry_kb(industries, user["lang"]))
+            return await UserBuisState.get_industry.set()
         elif user["user_type"] == "distributor":
-            await m.answer(_("Qaysi viloyat sizga qiziq?"), reply_markup=city_btn)
+            if user["is_registered"]:
+                await m.answer(_("Qaysi viloyat sizga qiziq? 👇"), reply_markup=city_btn)
+                return await UserDistState.get_industry.set()
+            await m.answer(_("Siz qaysi sohada distirbyutersiz? 👇"), reply_markup=industry_kb(industries, user["lang"]))
             return await UserDistState.get_industry.set()
         else:
-            await m.answer(_("Qaysi viloyatdan distribyuter sizga qiziq?"), reply_markup=city_btn)
-            return await UserSellerState.get_street.set()
+            if user["is_registered"]:
+                if user["is_subscribed"]:
+                    await m.answer(_("Sohani tanlang 👇"), reply_markup=industry_kb(industries, user["lang"]))
+                    return UserSellerState.get_interested_cat.set()
+                else:
+                    # count = await get_count(config, user["region"], )
+                    await m.answer(_("{count} ta distribyutor. Bular haqida ma'lumot olish uchun PRO versiyani xarid"
+                                     " qiling").format(count=0), reply_markup=buy_kb)
+                    return UserSellerState.get_pay.set()
+            await m.answer(_("Qaysi tumandan distribyuter sizga qiziq? 👇"), reply_markup=region_btn)
+            await UserSellerState.get_street.set()
 
 
 async def get_lang(m: Message, state: FSMContext):
@@ -56,6 +72,7 @@ async def get_name(m: Message, state: FSMContext):
 
 async def get_phone(m: Message, state: FSMContext, config):
     code = random.randint(1000, 9999)
+    print(code)
     await state.update_data(number=m.contact.phone_number, code=code)
     await send_code(m.contact.phone_number, code, config)
     await m.answer(_("Iltimos telefon raqamingizga kelgan kodni kiriting 📥"), reply_markup=remove_btn)
@@ -66,9 +83,6 @@ async def get_code(m: Message, state: FSMContext):
     data = await state.get_data()
     if str(data["code"]) != str(m.text):
         return await m.answer(_("Xato kod kiritildi 🚫"))
-    if data["type"] == "Magazinchi 🙍‍♂️":
-        await m.answer(_("Sizning magaziningiz qaysi shaharda joylashgan? 🏬", locale=data["lang"]),
-                       reply_markup=city_btn)
     await m.answer(_("Qaysi viloyatda faoliyat yuritasiz? 🏭", locale=data["lang"]), reply_markup=city_btn)
     await UserParamsState.next()
 
@@ -77,25 +91,26 @@ async def get_region(m: Message, state: FSMContext, config):
     if m.text == "Qashqadaryo":
         data = await state.get_data()
         if data["type"] == "Ishlab chiqaruvchi 🤵‍♂️":
-            user_type = "businessman"
+            user_type = "business"
         elif data["type"] == "Distirbyutor 🔎":
             user_type = "distributor"
         else:
             user_type = "magazin"
         user = await create_user(m.from_user.id, data["name"], data["lang"], data["number"], user_type, m.text, config)
         mess, kb = "", ""
-        industry = await get_industries(config)
+        industry = await get_industries(config, data["lang"])
         if data["type"] in ["Ishlab chiqaruvchi 🤵‍♂️"]:
             mess, kb = "Siz qaysi sohada ishlab chiqarasiz ?", industry_kb(industry, data["lang"])
             await UserBuisState.get_industry.set()
         elif data["type"] in ["Distirbyutor 🔎"]:
-            mess, kb = "Siz qaysi sohada distirbyutersiz ?",  industry_kb(industry, data["lang"])
+            mess, kb = "Siz qaysi sohada distirbyutersiz ?", industry_kb(industry, data["lang"])
             await UserDistState.get_industry.set()
         elif data["type"] in ["Magazinchi 🙍‍♂️"]:
             mess, kb = "Dokoningiz qaysi tumanda joylashgan ?", region_btn
             await UserSellerState.get_street.set()
         await m.answer(mess, reply_markup=kb)
-    return await m.answer("Tez orada! 😃")
+    else:
+        return await m.answer("Tez orada! 😃")
 
 
 def register_reg(dp: Dispatcher):

@@ -2,11 +2,23 @@ from typing import List
 
 import aiohttp
 
+import urllib.parse
+
 
 async def get_user(user_id, config):
     async with aiohttp.ClientSession() as session:
         async with session.get(url=f"{config.db.database_url}users/{user_id}") as response:
+            print(response.text)
             return await response.json()
+
+
+async def check_user(user_id, user_type, config):
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url=f"{config.db.database_url}{user_type}/{user_id}/") as response:
+            print(response.status)
+            if response.status == 200:
+                return True
+            return False
 
 
 async def create_user(tg_id, name, user_lang, user_phone, user_type, region, config):
@@ -22,63 +34,32 @@ async def create_user(tg_id, name, user_lang, user_phone, user_type, region, con
             return False
 
 
-async def pre_register_user(tg_id, region="dwd", category="fe", sub_category, config):
+async def pre_register_user(config, user_type: str, data: dict):
     async with aiohttp.ClientSession() as session:
-        async with session.post(url=f"{config.db.database_url}users",
-                                data={"tg_id": tg_id, "lang": user_lang, "phone": user_phone, "user_type": user_type})\
-                as response:
-            return await response.json()
+        async with session.post(url=f"{config.db.database_url}{user_type}/", data=data) as response:
+            print(response.text)
+            res = await response.json()
+            print(res)
+            if response.status == 201:
+                return await response.json()
+            else:
+                raise ConnectionError
 
 
-async def get_industries(config) -> List:
+async def get_industries(config, lang: str, parent_str: str = None) -> List:
     async with aiohttp.ClientSession() as session:
-        async with session.get(url=f"{config.db.database_url}categories") as response:
-            return await response.json()
+        fetch_url = config.db.database_url + f"categories/?lang={lang}&parent_str="
+        parent_str = urllib.parse.quote(str(parent_str), safe="'") if parent_str else ""
+        async with session.get(url=fetch_url + parent_str) as response:
+            print(response.text)
+            if response.status == 200:
+                return await response.json()
+            else:
+                raise ConnectionError
 
 
-async def update_user(user_id, config, lang=False, phone=False, name=False):
-    data = {}
-    if phone:
-        data["user_phone"] = phone
-    if lang:
-        data["user_lang"] = lang
-    if name:
-        data["user_name"] = name
+async def get_count(config, region: str, street: str, lang: str) -> List:
     async with aiohttp.ClientSession() as session:
-        async with session.patch(url=f"{config.db.database_url}user/update/{user_id}",
-                                 data=data) as response:
-            return await response.json()
-
-
-async def get_contacts(config):
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url=f"{config.db.database_url}calls/") as response:
-            return await response.json()
-
-
-async def get_prod_cats(config):
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url=f"{config.db.database_url}category/") as response:
-            return await response.json()
-
-
-async def get_prods(filter_type, option, config):
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url=f"{config.db.database_url}product/", params={"filter_type": filter_type,
-                                                                                       "option": option}) as response:
-            return await response.json()
-
-
-async def update_cart(user_id, option, config, obj_id=None, quan=None):
-    async with aiohttp.ClientSession() as session:
-        async with session.post(url=f"{config.db.database_url}cart/update", data={"tg_id": user_id,
-                                                                                         "option": option,
-                                                                                         "id": obj_id,
-                                                                                         "quan": quan}) as response:
-            return await response.json()
-
-
-async def get_cart(user_id, config):
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url=f"{config.db.database_url}cart/{user_id}") as response:
+        async with session.get(url=config.db.database_url,
+                               params={"region": region, "street": street, "lang": lang}) as response:
             return await response.json()

@@ -11,33 +11,65 @@ from tgbot.misc.states import *
 _ = i18ns.gettext
 
 
-async def get_buis_industry(m: Message, state: FSMContext):
-    data = await state.get_data()
-    await state.update_data(cat=m.text)
-    await m.answer(_("Sohani tanlang 👇", locale=data["lang"]), reply_markup=sub_cat_kb(m.text))
+# async def get_buis_industry(m: Message, state: FSMContext, config, user_lang):
+# data = await state.get_data()
+# print("DATA", data)
+# current_level = data.get("current_level")
+# if current_level is None:
+#     industries = await get_industries(config, user_lang)
+#     await state.update_data(current_level=0)
+#     return await m.answer(_("Siz qaysi sohada ishlab chiqarasiz? 👇"),
+#                    reply_markup=industry_kb(industries, user_lang))
+# else:
+#     if m.text in ["⬅️ Orqaga", "⬅️ Назад", "⬅️ Back"]:
+#         industries = await get_industries(config, user_lang, data["industry"])
+#         await state.update_data(current_level=current_level - 1)
+#         return await m.answer(_("Siz qaysi yo'nalishda ishlab chiqarasiz? 👇") if current_level == 0 else
+#                               _("Tovarni tanlang 👇"), reply_markup=industry_kb(industries, user_lang, current_level))
+#     industries = await get_industries(config, user_lang, m.text)
+#     if not industries:
+#         return await m.answer(_("Mavjud bo'lmagan bo'lim tanladingiz!"))
+#     await state.update_data(industry=m.text, current_level=current_level + 1)
+#     print("CURRENT LEVEL", current_level)
+#     await m.answer(text=_("Siz qaysi yo'nalishda ishlab chiqarasiz? 👇"), reply_markup=industry_kb(industries,
+#                                                                                                   user_lang,
+#                                                                                                   current_level))
+
+async def get_buis_industry(m: Message, state: FSMContext, config, user_lang):
+    await state.update_data(category=m.text)
+    industries = await get_industries(config, user_lang, m.text)
+    await m.answer(_("Yo'nalishni tanlang 👇"), reply_markup=industry_kb(industries, user_lang))
     await UserBuisState.next()
 
 
-async def get_buis_sub_industry(m: Message, state: FSMContext):
-    await state.update_data(sub_cat=m.text)
-    data = await state.get_data()
-    await m.answer(_("Sohani tanlang 👇", locale=data["lang"]), reply_markup=prod_cat_kb(m.text, data["cat"]))
+async def get_buis_sub_industry(m: Message, state: FSMContext, config, user_lang):
+    industries = await get_industries(config, user_lang, m.text)
+    print(industries)
+    await m.answer(_("Tovarni tanlang 👇"), reply_markup=industry_kb(industries, user_lang, 1))
     await UserBuisState.next()
 
 
-async def get_buis_prod(m: Message, state: FSMContext):
+async def get_buis_prod_industry(m: Message, state: FSMContext, config):
     data = await state.get_data()
-    await pre_register_user(tg_id=m.from_user.id, cat=data["lang"], name=data["name"], number=data["number"],
-                            us_type=data["type"], region=data["region"], product=m.text)
-    await m.answer(_("Qaysi viloyatdan distribyuter qidiryapsiz?"), reply_markup=citys_btn)
+    json_data = {
+        "tg_id": m.from_user.id,
+        "industry": data["category"],
+        "tg_name": m.from_user.full_name,
+        "product_name": m.text
+    }
+
+    res = await pre_register_user(config, user_type="business", data=json_data)
+    print(res)
+    await m.answer(_("Qaysi viloyatdan distribyuter qidiryapsiz?"), reply_markup=city_btn)
     await UserBuisState.next()
 
 
-async def get_interested_region(m: Message, state: FSMContext):
+async def get_interested_region(m: Message, state: FSMContext, config, user_lang):
     if m.text != "Qashqadaryo":
         return await m.answer("Tez orada! 😃")
     await state.update_data(interested_region=m.text)
-    await m.answer(_("Qaysi sohada?"), reply_markup=cats_kb)
+    industry = await get_industries(config, user_lang)
+    await m.answer(_("Qaysi sohada?"), reply_markup=industry_kb(industry, user_lang))
     await UserBuisState.next()
 
 
@@ -125,10 +157,10 @@ async def back(m: Message, state: FSMContext):
     data = await state.get_data()
     state = await state.get_state()
     if state == "UserBuisState:get_cat":
-        await m.answer(_("Qaysi viloyatda faoliyat yuritasiz? 🏭"), reply_markup=citys_btn)
-        return await UserBuisState.get_region.set()
+        await m.answer(_("Qaysi viloyatda faoliyat yuritasiz? 🏭"), reply_markup=city_btn)
+        return await UserParamsState.get_region.set()
     elif state == "UserBuisState:get_sub_cat":
-        await m.answer(_("Sohani tanlang 👇"), reply_markup=cats_kb)
+        await m.answer(_("Sohani tanlang 👇"), reply_markup=industry_kb(await get_industries()))
         return await UserBuisState.get_cat.set()
     elif state == "UserBuisState:get_prod":
         await m.answer(_("Sohani tanlang 👇"), reply_markup=sub_cat_kb(data['cat']))
@@ -149,14 +181,15 @@ async def back(m: Message, state: FSMContext):
             reply_markup=buis_pro(res))
         return await UserBuisState.get_dist.set()
     elif state == "UserBuisState:get_dist":
-        await m.answer(_("Sohani tanlang 👇"), reply_markup=prod_cat_kb(data["interested_sub_cat"], data["interested_cat"]))
+        await m.answer(_("Sohani tanlang 👇"),
+                       reply_markup=prod_cat_kb(data["interested_sub_cat"], data["interested_cat"]))
         return await UserBuisState.get_interested_prod.set()
 
 
 def register_buis(dp: Dispatcher):
-    dp.register_message_handler(get_buis_industry, BackFilter(), state=UserBuisState.get_industry)
-    dp.register_message_handler(get_buis_sub_industry, BackFilter(), state=UserBuisState.get_sub_cat)
-    dp.register_message_handler(get_buis_prod, BackFilter(), state=UserBuisState.get_prod)
+    dp.register_message_handler(get_buis_industry, state=UserBuisState.get_industry)
+    dp.register_message_handler(get_buis_sub_industry, BackFilter(), state=UserBuisState.get_sub_industry)
+    dp.register_message_handler(get_buis_prod_industry, BackFilter(), state=UserBuisState.get_prod_industry)
     dp.register_message_handler(get_interested_region, BackFilter(), state=UserBuisState.get_interested_region)
     dp.register_message_handler(get_interested_cat, BackFilter(), state=UserBuisState.get_interested_cat)
     dp.register_message_handler(get_interested_sub_cat, BackFilter(), state=UserBuisState.get_interested_sub_cat)

@@ -21,12 +21,13 @@ class UserSellerState(StatesGroup):
     get_pay = State()
     get_pay_conf = State()
     get_success = State()
+    get_interested_cat = State()
+    get_interested_sub_cat = State()
+    get_interested_prod = State()
 
 
 class UserDistState(StatesGroup):
     get_industry = State()
-    get_sub_industry = State()
-    get_prod_name = State()
     get_prod_photo = State()
     get_dist = State()
     get_agent_region = State()
@@ -37,8 +38,8 @@ class UserDistState(StatesGroup):
 
 class UserBuisState(StatesGroup):
     get_industry = State()
-    get_sub_cat = State()
-    get_prod = State()
+    get_sub_industry = State()
+    get_prod_industry = State()
     get_interested_region = State()
     get_interested_cat = State()
     get_interested_sub_cat = State()

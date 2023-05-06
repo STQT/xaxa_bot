@@ -7,6 +7,6 @@ class EnvironmentMiddleware(LifetimeControllerMiddleware):
     def __init__(self, **kwargs):
         super().__init__()
         self.kwargs = kwargs
-    
+
     async def pre_process(self, obj, data, *args):
         data.update(**self.kwargs)
