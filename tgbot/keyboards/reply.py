@@ -20,6 +20,11 @@ def lang_btns(back):
     return lang_btn
 
 
+organization_type_btns = ("Ishlab chiqaruvchi 🤵‍", "Distirbyutor 🔎", "Magazinchi 🙍‍♂",
+                          ...,
+                          )
+
+
 def main_menu_btns(locale=None):
     main_menu_btn = ReplyKeyboardMarkup(resize_keyboard=True).add(
         KeyboardButton(_("Ishlab chiqaruvchi 🤵‍♂️", locale=locale)),

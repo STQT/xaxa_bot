@@ -8,14 +8,12 @@ import urllib.parse
 async def get_user(user_id, config):
     async with aiohttp.ClientSession() as session:
         async with session.get(url=f"{config.db.database_url}users/{user_id}") as response:
-            print(response.text)
             return await response.json()
 
 
 async def check_user(user_id, user_type, config):
     async with aiohttp.ClientSession() as session:
         async with session.get(url=f"{config.db.database_url}{user_type}/{user_id}/") as response:
-            print(response.status)
             if response.status == 200:
                 return True
             return False
@@ -37,9 +35,6 @@ async def create_user(tg_id, name, user_lang, user_phone, user_type, region, con
 async def pre_register_user(config, user_type: str, data: dict):
     async with aiohttp.ClientSession() as session:
         async with session.post(url=f"{config.db.database_url}{user_type}/", data=data) as response:
-            print(response.text)
-            res = await response.json()
-            print(res)
             if response.status == 201:
                 return await response.json()
             else:
@@ -51,7 +46,6 @@ async def get_industries(config, lang: str, parent_str: str = None) -> List:
         fetch_url = config.db.database_url + f"categories/?lang={lang}&parent_str="
         parent_str = urllib.parse.quote(str(parent_str), safe="'") if parent_str else ""
         async with session.get(url=fetch_url + parent_str) as response:
-            print(response.text)
             if response.status == 200:
                 return await response.json()
             else:
