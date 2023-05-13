@@ -1,3 +1,7 @@
+from tgbot.misc.i18n import i18ns
+
+_ = i18ns.lazy_gettext
+
 textss = {"Oziq - ovqat maxsulotlari": {"Bakaleya": ["Konservalangan sabzavotlar", "Makaronlar", "Dukkakliklar",
                                                      "Konservalangan baliklar",
                                                      "Konservalangan go'sht", "Pishiriqlar va disertlar uchun tovarlar",

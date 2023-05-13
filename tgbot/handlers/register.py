@@ -4,15 +4,18 @@ from aiogram import Dispatcher
 from aiogram.dispatcher import FSMContext
 from aiogram.types import Message
 
-from tgbot.db.db_api import create_user, get_industries, check_user, get_count
+from tgbot.db.db_api import create_user, get_industries, check_user, get_count, get_org
 from tgbot.db.db_api import get_user
 from tgbot.filters.back import BackFilter
+from tgbot.handlers.dist import main_dist_start
 from tgbot.keyboards.reply import *
 from tgbot.misc.i18n import i18ns
 from tgbot.misc.states import *
 from tgbot.services.sms import send_code
 
 _ = i18ns.gettext
+
+
 
 
 async def user_start(m: Message, status, config):
@@ -31,20 +34,21 @@ async def user_start(m: Message, status, config):
             return await UserBuisState.get_industry.set()
         elif user["user_type"] == "distributor":
             if user["is_registered"]:
-                await m.answer(_("Qaysi viloyat sizga qiziq? 👇"), reply_markup=city_btn)
-                return await UserDistState.get_industry.set()
+                await m.answer(_("Bo'limni tanlang"), reply_markup=distributer_start_btn(user["lang"]))
+                return await UserDistMainState.get_main.set()
             await m.answer(_("Siz qaysi sohada distirbyutersiz? 👇"), reply_markup=industry_kb(industries, user["lang"]))
-            return await UserDistState.get_industry.set()
+            await UserDistState.get_industry.set()
+            return
         else:
             if user["is_registered"]:
                 if user["is_subscribed"]:
                     await m.answer(_("Sohani tanlang 👇"), reply_markup=industry_kb(industries, user["lang"]))
-                    return UserSellerState.get_interested_cat.set()
+                    return await UserSellerState.get_interested_industry.set()
                 else:
-                    # count = await get_count(config, user["region"], )
+                    count = await get_count(config, "check-distributes", user["region"])
                     await m.answer(_("{count} ta distribyutor. Bular haqida ma'lumot olish uchun PRO versiyani xarid"
-                                     " qiling").format(count=0), reply_markup=buy_kb)
-                    return UserSellerState.get_pay.set()
+                                     " qiling").format(count=count["count"]), reply_markup=buy_kb)
+                    return await UserSellerState.get_pay.set()
             await m.answer(_("Qaysi tumandan distribyuter sizga qiziq? 👇"), reply_markup=region_btn)
             await UserSellerState.get_street.set()
 
@@ -74,7 +78,7 @@ async def get_phone(m: Message, state: FSMContext, config):
     code = random.randint(1000, 9999)
     print(code)
     await state.update_data(number=m.contact.phone_number, code=code)
-    await send_code(m.contact.phone_number, code, config)
+    # await send_code(m.contact.phone_number, code, config)
     await m.answer(_("Iltimos telefon raqamingizga kelgan kodni kiriting 📥"), reply_markup=remove_btn)
     await UserParamsState.next()
 
@@ -97,6 +101,7 @@ async def get_region(m: Message, state: FSMContext, config):
         else:
             user_type = "magazin"
         user = await create_user(m.from_user.id, data["name"], data["lang"], data["number"], user_type, m.text, config)
+        print(user, "asdasdas")
         mess, kb = "", ""
         industry = await get_industries(config, data["lang"])
         if data["type"] in ["Ishlab chiqaruvchi 🤵‍♂️"]:

@@ -9,6 +9,7 @@ from tgbot.config import load_config
 from tgbot.filters.admin import AdminFilter
 from tgbot.filters.back import BackFilter
 from tgbot.handlers.admin import register_admin
+from tgbot.handlers.dist import register_dist
 from tgbot.handlers.echo import register_echo
 from tgbot.handlers.buis import register_buis
 from tgbot.handlers.register import register_reg
@@ -37,6 +38,7 @@ def register_all_handlers(dp):
     register_admin(dp)
     register_reg(dp)
     register_seller(dp)
+    register_dist(dp)
     register_buis(dp)
     if DEBUG:
         register_echo(dp)

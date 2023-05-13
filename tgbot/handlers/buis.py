@@ -35,6 +35,7 @@ _ = i18ns.gettext
 #                                                                                                   user_lang,
 #                                                                                                   current_level))
 
+
 async def get_buis_industry(m: Message, state: FSMContext, config, user_lang):
     await state.update_data(category=m.text)
     industries = await get_industries(config, user_lang, m.text)
@@ -44,7 +45,6 @@ async def get_buis_industry(m: Message, state: FSMContext, config, user_lang):
 
 async def get_buis_sub_industry(m: Message, state: FSMContext, config, user_lang):
     industries = await get_industries(config, user_lang, m.text)
-    print(industries)
     await m.answer(_("Tovarni tanlang 👇"), reply_markup=industry_kb(industries, user_lang, 1))
     await UserBuisState.next()
 

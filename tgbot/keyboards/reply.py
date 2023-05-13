@@ -33,12 +33,23 @@ def main_menu_btns(locale=None):
     return main_menu_btn
 
 
-def industry_kb(industries: list[str], lang, current_lvl=0):
+def industry_kb(industries, lang, current_lvl=0):
     industry_btn = ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
     for industry in industries:
         industry_btn.insert(industry[f"name_{lang}"])
     if current_lvl > 0:
         industry_btn.insert(KeyboardButton(_("⬅️ Orqaga")))
+    return industry_btn
+
+
+def distributer_start_btn(lang):
+    industry_btn = ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
+    industry_btn_texts = (
+        _("Mening maxsulotlarim", locale=lang),
+        _("Maxsulot qo'shish", locale=lang),
+        _("Magazin qidirish", locale=lang))
+    for btn in industry_btn_texts:
+        industry_btn.insert(KeyboardButton(btn))
     return industry_btn
 
 
