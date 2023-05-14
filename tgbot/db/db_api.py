@@ -1,8 +1,7 @@
+import urllib.parse
 from typing import List
 
 import aiohttp
-
-import urllib.parse
 
 
 async def get_user(user_id, config):
@@ -28,8 +27,6 @@ async def create_user(tg_id, name, user_lang, user_phone, user_type, region, con
                                 json={"tg_id": tg_id, "tg_name": name, "lang": user_lang, "phone": user_phone,
                                       "user_type": user_type,
                                       "region": region}) as response:
-            print(url)
-            print(response.text)
             if response.status == 201:
                 return await response.json()
             return False
@@ -37,9 +34,6 @@ async def create_user(tg_id, name, user_lang, user_phone, user_type, region, con
 
 async def pre_register_user(config, user_type: str, data: dict):
     async with aiohttp.ClientSession() as session:
-        print(f"{config.db.database_url}{user_type}/")
-        print(data)
-
         async with session.post(url=f"{config.db.database_url}{user_type}/", data=data) as response:
             print(response.text)
             if response.status == 201:
@@ -67,6 +61,7 @@ async def get_org(config, **kwargs) -> dict:
 
 async def get_count(config, org: str, region: str) -> dict:
     async with aiohttp.ClientSession() as session:
+        print(config.db.database_url + org)
         async with session.get(url=config.db.database_url + org,
                                params={"region_str": region}) as response:
             return await response.json()
@@ -74,6 +69,43 @@ async def get_count(config, org: str, region: str) -> dict:
 
 async def status_update(config, tg_id: int) -> None:
     async with aiohttp.ClientSession() as session:
-        async with session.put(url=f"{config.db.database_url}users/{tg_id}",
-                               json={"is_subscribed": True}) as response:
+        async with session.patch(url=f"{config.db.database_url}users/{tg_id}",
+                                 json={"is_subscribed": True}) as response:
             return await response.json()
+
+
+async def add_product(config, data: dict):
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url=f"{config.db.database_url}products/", data=data) as response:
+            if response.status == 201:
+                return await response.json()
+            else:
+                return None
+
+
+async def add_agent(config, data: dict):
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url=f"{config.db.database_url}agents/", data=data) as response:
+            if response.status == 201:
+                return await response.json()
+            else:
+                raise ConnectionError
+
+
+async def get_my_products(config, tg_id: str):
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url=f"{config.db.database_url}products/",
+                               params={"distributor__user__tg_id": tg_id}) as response:
+            if response.status == 200:
+                return await response.json()
+            else:
+                raise ConnectionError
+
+
+async def get_one_product(config, product_name: str):
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url=f"{config.db.database_url}products/{product_name}") as response:
+            if response.status == 200:
+                return await response.json()
+            else:
+                raise ConnectionError

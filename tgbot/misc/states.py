@@ -30,10 +30,14 @@ class UserDistState(StatesGroup):
     get_industry = State()
     get_sub_industry = State()
     get_prod_industry = State()
+    get_prod_name = State()
+    get_prod_photo = State()
+    get_prod_description = State()
     get_agent_region = State()
     get_agent_phone = State()
     get_supervisor = State()
     company_name = State()
+    company_phone = State()
 
 
 class UserDistMainState(StatesGroup):
@@ -47,8 +51,10 @@ class UserAddProductState(StatesGroup):
     get_description = State()
 
 
-class UserSearchProductState(StatesGroup):
-    pass
+class UserSearchMagazinState(StatesGroup):
+    get_region = State()
+    get_city = State()
+    get_magazines = State()
 
 
 class UserBuisState(StatesGroup):

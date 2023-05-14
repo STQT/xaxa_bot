@@ -69,6 +69,7 @@ async def get_sell_interested_sub_industry(m: Message, config, user_lang):
 
 async def get_sell_interested_product(m: Message, config, user_lang):
     industries = await get_industries(config, user_lang, m.text)
+    # TODO: change dp request
     await m.answer(_("Tovarni tanlang 👇"), reply_markup=industry_kb(industries, user_lang, 1))
     await UserBuisState.next()
 

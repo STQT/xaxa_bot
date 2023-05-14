@@ -6,6 +6,11 @@ from tgbot.db.db_api import get_user
 
 class ACLMiddleware(BaseMiddleware):
     async def setup_chat(self, data: dict, user: types.User):
+        # data["user"] = "uz"
+        # data["user_lang"] = "uz"
+        # data['status'] = False
+        # data['lang'] = "uz"
+        # data["user_type"] = "distributor"
         user_loc = await get_user(user.id, data['config'])
         if "detail" in user_loc:
             data['user_lang'], data['status'] = user.language_code, True

@@ -42,6 +42,13 @@ def industry_kb(industries, lang, current_lvl=0):
     return industry_btn
 
 
+def products_kb(industries, lang):
+    industry_btn = ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
+    for industry in industries:
+        industry_btn.insert(industry["name"])
+    return industry_btn
+
+
 def distributer_start_btn(lang):
     industry_btn = ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
     industry_btn_texts = (

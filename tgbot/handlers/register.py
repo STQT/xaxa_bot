@@ -4,18 +4,14 @@ from aiogram import Dispatcher
 from aiogram.dispatcher import FSMContext
 from aiogram.types import Message
 
-from tgbot.db.db_api import create_user, get_industries, check_user, get_count, get_org
+from tgbot.db.db_api import create_user, get_industries, get_count
 from tgbot.db.db_api import get_user
 from tgbot.filters.back import BackFilter
-from tgbot.handlers.dist import main_dist_start
 from tgbot.keyboards.reply import *
 from tgbot.misc.i18n import i18ns
 from tgbot.misc.states import *
-from tgbot.services.sms import send_code
 
 _ = i18ns.gettext
-
-
 
 
 async def user_start(m: Message, status, config):

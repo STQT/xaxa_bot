@@ -45,7 +45,7 @@ async def get_buis_industry(m: Message, state: FSMContext, config, user_lang):
 
 async def get_buis_sub_industry(m: Message, state: FSMContext, config, user_lang):
     industries = await get_industries(config, user_lang, m.text)
-    await m.answer(_("Tovarni tanlang 👇"), reply_markup=industry_kb(industries, user_lang, 1))
+    await m.answer(_("Distributorlarni tanlang"), reply_markup=industry_kb(industries, user_lang, 1))
     await UserBuisState.next()
 
 
@@ -86,9 +86,9 @@ async def get_interested_sub_cat(m: Message, state: FSMContext):
     await UserBuisState.next()
 
 
-async def get_interested_prod(m: Message, state: FSMContext, user):
+async def get_interested_prod(m: Message, state: FSMContext, config, user):
     data = await state.get_data()
-    res = await get_count(m.text, "Distirbyutor 🔎", data["interested_region"])
+    res = await get_count(config, "check-distributes", data["interested_region"])
     await state.update_data(interested_prod=m.text)
     if user.status == "basic":
         await m.answer(
