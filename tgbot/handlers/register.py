@@ -10,6 +10,7 @@ from tgbot.filters.back import BackFilter
 from tgbot.keyboards.reply import *
 from tgbot.misc.i18n import i18ns
 from tgbot.misc.states import *
+from tgbot.services.sms import send_code
 
 _ = i18ns.gettext
 
@@ -72,9 +73,8 @@ async def get_name(m: Message, state: FSMContext):
 
 async def get_phone(m: Message, state: FSMContext, config):
     code = random.randint(1000, 9999)
-    print(code)
     await state.update_data(number=m.contact.phone_number, code=code)
-    # await send_code(m.contact.phone_number, code, config)
+    await send_code(m.contact.phone_number, code, config)
     await m.answer(_("Iltimos telefon raqamingizga kelgan kodni kiriting 📥"), reply_markup=remove_btn)
     await UserParamsState.next()
 
