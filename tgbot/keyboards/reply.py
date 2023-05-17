@@ -90,6 +90,8 @@ city_btn = ReplyKeyboardMarkup(resize_keyboard=True).add(KeyboardButton(_("Toshk
                                                          KeyboardButton(_("Sirdaryo")),
                                                          KeyboardButton(_("Surxondaryo")))
 
+distreet_btn = ReplyKeyboardMarkup(resize_keyboard=True).add(KeyboardButton(_("O'tkazib yuborish")))
+
 
 def sub_cat_kb(text):
     sub_cats_kb = ReplyKeyboardMarkup(resize_keyboard=True)

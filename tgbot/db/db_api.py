@@ -59,11 +59,15 @@ async def get_org(config, **kwargs) -> dict:
             return await response.json()
 
 
-async def get_count(config, org: str, region: str) -> dict:
+async def get_count(config, org: str, region: str, city: str) -> dict:
     async with aiohttp.ClientSession() as session:
         print(config.db.database_url + org)
         async with session.get(url=config.db.database_url + org,
-                               params={"region_str": region}) as response:
+                               params={
+                                   "user__region": region,
+                                   "city": city,
+                               }) as response:
+            print(response.url)
             return await response.json()
 
 

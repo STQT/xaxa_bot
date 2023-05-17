@@ -26,6 +26,15 @@ class UserSellerState(StatesGroup):
     get_interested_prod = State()
 
 
+class UserSearchMagazinPaymentState(StatesGroup):
+    get_region = State()
+    get_city = State()
+    get_pay = State()
+    get_pay_conf = State()
+    get_success = State()
+    get_magazines = State()
+
+
 class UserDistState(StatesGroup):
     get_industry = State()
     get_sub_industry = State()
@@ -34,6 +43,8 @@ class UserDistState(StatesGroup):
     get_prod_photo = State()
     get_prod_description = State()
     get_agent_region = State()
+    get_agent_city = State()
+    get_agent_distreet = State()
     get_agent_phone = State()
     get_supervisor = State()
     company_name = State()
@@ -49,12 +60,6 @@ class UserAddProductState(StatesGroup):
     get_name = State()
     get_photo = State()
     get_description = State()
-
-
-class UserSearchMagazinState(StatesGroup):
-    get_region = State()
-    get_city = State()
-    get_magazines = State()
 
 
 class UserBuisState(StatesGroup):

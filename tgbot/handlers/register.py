@@ -42,7 +42,7 @@ async def user_start(m: Message, status, config):
                     await m.answer(_("Sohani tanlang 👇"), reply_markup=industry_kb(industries, user["lang"]))
                     return await UserSellerState.get_interested_industry.set()
                 else:
-                    count = await get_count(config, "check-distributes", user["region"])
+                    count = await get_count(config, "check-distributes", user["region"], "")
                     await m.answer(_("{count} ta distribyutor. Bular haqida ma'lumot olish uchun PRO versiyani xarid"
                                      " qiling").format(count=count["count"]), reply_markup=buy_kb)
                     return await UserSellerState.get_pay.set()

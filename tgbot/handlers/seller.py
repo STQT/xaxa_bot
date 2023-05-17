@@ -3,7 +3,6 @@ from aiogram.dispatcher import FSMContext
 from aiogram.types import Message, LabeledPrice, PreCheckoutQuery, ContentTypes
 
 from tgbot.db.db_api import *
-from tgbot.filters.back import BackFilter
 from tgbot.keyboards.reply import *
 from tgbot.misc.i18n import i18ns
 from tgbot.misc.states import *
@@ -35,7 +34,8 @@ async def get_buy_sell(m: Message, state: FSMContext, config):
     await state.update_data(pay_type=m.text)
     msg = await m.bot.send_invoice(chat_id=m.from_user.id, photo_url=photo, currency="rub", title="PRO",
                                    description="Pro uchun tolov",
-                                   payload="test-invoice-payload", provider_token="1744374395:TEST:7ef02551931750210425",
+                                   payload="test-invoice-payload",
+                                   provider_token=token,
                                    prices=[price])
     await state.update_data()
     await UserSellerState.next()

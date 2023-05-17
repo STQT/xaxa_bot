@@ -59,7 +59,6 @@ async def get_buis_prod_industry(m: Message, state: FSMContext, config):
     }
 
     res = await pre_register_user(config, user_type="business", data=json_data)
-    print(res)
     await m.answer(_("Qaysi viloyatdan distribyuter qidiryapsiz?"), reply_markup=city_btn)
     await UserBuisState.next()
 
@@ -110,7 +109,7 @@ async def get_buy_buis(m: Message, state: FSMContext, config):
     await state.update_data(pay_type=m.text)
     await m.bot.send_invoice(chat_id=m.from_user.id, photo_url=photo, currency="rub", title="PRO",
                              description="Pro uchun tolov",
-                             payload="test-invoice-payload", provider_token="1744374395:TEST:a7b07f1db0034c9dbfe1",
+                             payload="test-invoice-payload", provider_token=token,
                              prices=[price])
     await UserBuisState.next()
 
@@ -120,9 +119,9 @@ async def pre_checkout_query(query: PreCheckoutQuery):
     await UserBuisState.next()
 
 
-async def success_payment(m: Message, state: FSMContext):
+async def success_payment(m: Message, state: FSMContext, config):
     data = await state.get_data()
-    await update_user(m.from_user.id, "pro")
+    await status_update(config, m.from_user.id)
     await m.answer(_("Siz oylik patpiskaga a'zo bo'ldingiz"))
     res = await get_count(data["interested_prod"], "Distirbyutor 🔎", data["interested_region"])
     await m.answer(

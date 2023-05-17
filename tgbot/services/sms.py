@@ -9,5 +9,4 @@ async def send_code(phone, code, config):
     async with aiohttp.ClientSession() as session:
         async with session.post(url=config.misc.sms_url, auth=BasicAuth(config.misc.sms_login, config.misc.sms_pass),
                                 json=sms_data) as response:
-
-            pass
+            ...
