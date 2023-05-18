@@ -59,15 +59,15 @@ async def get_org(config, **kwargs) -> dict:
             return await response.json()
 
 
-async def get_count(config, org: str, region: str, city: str) -> dict:
+async def get_count(config, org: str, region: str, city: str, page: int = None) -> dict:
+    print("@@@@@@@@@@@@@@@@@", config, org, region, city, page)
     async with aiohttp.ClientSession() as session:
-        print(config.db.database_url + org)
         async with session.get(url=config.db.database_url + org,
                                params={
                                    "user__region": region,
                                    "city": city,
+                                   "page": 1 if page is None else page
                                }) as response:
-            print(response.url)
             return await response.json()
 
 
@@ -106,9 +106,41 @@ async def get_my_products(config, tg_id: str):
                 raise ConnectionError
 
 
-async def get_one_product(config, product_name: str):
+async def get_products(config, params=None):
     async with aiohttp.ClientSession() as session:
-        async with session.get(url=f"{config.db.database_url}products/{product_name}") as response:
+        print(params)
+        async with session.get(url=f"{config.db.database_url}products/",
+                               params=params) as response:
+            if response.status == 200:
+                return await response.json()
+            else:
+                raise ConnectionError
+
+
+async def get_one_product(config, product_name: str, params=None):
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url=f"{config.db.database_url}new-products/{product_name}/",
+                               params=params) as response:
+            if response.status == 200:
+                return await response.json()
+            else:
+                raise ConnectionError
+
+
+async def get_magazin(config, tg_id):
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url=f"{config.db.database_url}magazin/{tg_id}/") as response:
+            if response.status == 200:
+                return await response.json()
+            else:
+                raise ConnectionError
+
+
+async def get_one_magazin(config, magazin_name: str, params=None):
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url=f"{config.db.database_url}new-magazin/{magazin_name}/",
+                               params=params) as response:
+            print(response.text, params)
             if response.status == 200:
                 return await response.json()
             else:

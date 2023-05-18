@@ -18,12 +18,14 @@ class UserParamsState(StatesGroup):
 
 class UserSellerState(StatesGroup):
     get_street = State()
+    get_name = State()
     get_pay = State()
     get_pay_conf = State()
     get_success = State()
     get_interested_industry = State()
     get_interested_sub_industry = State()
     get_interested_prod = State()
+    get_agents_prod = State()
 
 
 class UserSearchMagazinPaymentState(StatesGroup):
@@ -49,6 +51,10 @@ class UserDistState(StatesGroup):
     get_supervisor = State()
     company_name = State()
     company_phone = State()
+
+
+class UserDistProductRequest(StatesGroup):
+    get_description = State()
 
 
 class UserDistMainState(StatesGroup):

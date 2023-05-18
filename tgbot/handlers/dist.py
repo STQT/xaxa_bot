@@ -3,10 +3,11 @@ from aiogram.dispatcher import FSMContext
 from aiogram.types import Message, PreCheckoutQuery, LabeledPrice, ContentTypes
 
 from tgbot.db.db_api import get_industries, add_product, add_agent, get_my_products, get_one_product, get_count, \
-    get_user, status_update
+    get_user, status_update, get_one_magazin
 from tgbot.filters.back import BackFilter
 # from tgbot.keyboards.inline import *
 from tgbot.keyboards.reply import *
+from tgbot.misc.content import pagination_reply_btn
 from tgbot.misc.i18n import i18ns
 from tgbot.misc.states import *
 
@@ -22,6 +23,9 @@ async def main_dist_start(m: Message, state: FSMContext, config, user_lang):
         industries = await get_industries(config, user_lang)
         await m.answer(_("Siz qaysi sohada distirbyutersiz? 👇"), reply_markup=industry_kb(industries, user_lang))
         await UserDistState.get_industry.set()
+    elif m.text == _("Maxsulot so'rash", locale=user_lang):
+        await m.answer(_("O'zingiz haqingizda ma'lumot qoldiring", locale=user_lang), reply_markup=remove_btn)
+        await UserDistProductRequest.get_description.set()
     else:
         await m.answer(_("Qaysi viloyatdagi magazinlar sizga qiziq?", locale=user_lang), reply_markup=city_btn)
         await UserSearchMagazinPaymentState.get_region.set()
@@ -68,14 +72,14 @@ async def get_product_photo(m: Message, state: FSMContext, config, user_lang):
 # Get product description
 async def get_product_description(m: Message, state: FSMContext, config, user_lang):
     await state.update_data(description=m.text)
-    await m.answer(_("Agent xududini tanlang"), reply_markup=region_btn)
+    await m.answer(_("Agent xududini tanlang"), reply_markup=city_btn)
     await UserDistState.next()
 
 
 # Get product agent region
 async def get_product_agent_region(m: Message, state: FSMContext, config, user_lang):
     await state.update_data(agent_region=m.text)
-    await m.answer(_("Agent shaxrini tanlang"), reply_markup=city_btn)
+    await m.answer(_("Agent shaxrini tanlang"), reply_markup=region_btn)
     await UserDistState.next()
 
 
@@ -153,17 +157,28 @@ async def search_magazines_get_region(m: Message, state: FSMContext, config, use
 
 async def search_magazines_get_city(m: Message, state: FSMContext, config, user_lang):
     # await m.answer(_("Shuncha magazin bor"), reply_markup=ReplyKeyboardRemove())
+    await state.update_data(city=m.text)
     data = await state.get_data()
     user = await get_user(m.from_user.id, config)
     results = await get_count(config, "check-magazines", data.get("region"), m.text)
+    # results = await get_count(config, "check-magazines", "Qashqadaryo", "Koson")
     if user["is_subscribed"] is False:
         await m.answer(_("{count} ta magazin. Bular haqida ma'lumot olish uchun PRO versiyani xarid"
                          " qiling").format(count=results["count"]), reply_markup=buy_kb)
         return await UserSearchMagazinPaymentState.get_pay.set()
     else:
-        # TODO: Need write paginated kbs for the magazines results
-        industries = await get_industries(config, user_lang)
-        await m.answer(_("Magazinlarni tanlang 👇"), reply_markup=industry_kb(industries, user_lang))
+        kb = pagination_reply_btn(results)
+        if results['next']:
+            await m.answer(_("Magazinlarni tanlang 👇\n"
+                             "Sahifa: {page}. Umumiy: {count}").format(page=1, count=results['count']), reply_markup=kb)
+        elif not results['results']:
+            await m.answer(_("Hozirda magazinlar mavjud emas"), reply_markup=distributer_start_btn(user_lang))
+            await state.finish()
+            await UserDistMainState.get_main.set()
+            return
+        else:
+            await m.answer(_("Magazinlarni tanlang 👇"), reply_markup=kb)
+        await state.update_data(page=1)
         await UserSearchMagazinPaymentState.get_magazines.set()
 
 
@@ -193,21 +208,47 @@ async def success_payment(m: Message, state: FSMContext, config, user_lang):
     await status_update(config, m.from_user.id)
     await m.delete()
     await m.answer(_("Siz oylik patpiskaga a'zo bo'ldingiz!"))
-    industries = await get_industries(config, user_lang, m.text)
-    # TODO: need to response paginated kbs view
-    await m.answer(_("Magazinlarni tanlang 👇"), reply_markup=industry_kb(industries, user_lang))
+    results = await get_count(config, "check-magazines", "Qashqadaryo", "Koson")
+    kb = pagination_reply_btn(results)
+    print("############################################")
+    if results["next"]:
+        await m.answer(_("Magazinlarni tanlang 👇"), reply_markup=kb)
+    else:
+        await m.answer(_("Magazinlarni tanlang 👇"
+                         "Sahifa: {page}. Umumiy: {count}").format(page=1, count=results['count']), reply_markup=kb)
     await UserSearchMagazinPaymentState.get_magazines.set()
 
 
 async def echo_magazine(m: Message, state: FSMContext, config, user_lang):
     data = await state.get_data()
-    print(data, "DATA")
-    await m.answer(m.text)
+    page = data.get("page", 1)
+    if m.text in (_("⏭ Keyingi"), _("⏮ Oldingi")):
+        if m.text == _("⏭ Keyingi"):
+            page += 1
+        elif m.text == _("⏮ Oldingi"):
+            page -= 1
+        await state.update_data(page=page)
+        # results = await get_count(config, "check-magazines", "Qashqadaryo", "Koson", page)
+        results = await get_count(config, "check-magazines", data.get("region"), data.get("city"), page)
+        kb = pagination_reply_btn(results)
+        await m.answer(_("Magazinlarni tanlang 👇\n"
+                         "Sahifa: {page}. Umumiy: {count}").format(page=page, count=results['count']), reply_markup=kb)
+    else:
+        magazin = await get_one_magazin(config, m.text)
+        about = (f"Nomi: {magazin['name']}\n"
+                 f"Telefon: {magazin['phone']}\n"
+                 f"Viloyat: {magazin['region']}\n"
+                 f"Shahar: {magazin['city']}\n"
+                 f"Tuman: {magazin['distreet']}\n"
+                 )
+        await m.answer(about)
 
 
 async def get_my_product_handler(m: Message, state: FSMContext, config, user_lang):
     product_name = m.text
-    data = await get_one_product(config=config, product_name=product_name)
+    data = await get_one_product(config=config, product_name=product_name, params={
+        "distributor__user__tg_id": m.from_user.id
+    })
     description = (
         f"Maxsulot nomi: {data['name']}\n"
         f"Tavsif: {data['description']}\n"
@@ -224,6 +265,13 @@ async def get_my_product_handler(m: Message, state: FSMContext, config, user_lan
             f"Korxona tel: {i['corp_phone']}\n"
         )
         await m.answer(agent_info)
+
+
+async def send_product_request(m: Message, state: FSMContext, config, user_lang):
+    await m.answer(_("Sizning so'rovingiz ishlab chiqaruvchilarga jo'natildi ✅"))
+    await m.send_copy(config.tg_bot.buis_ids)
+    await state.finish()
+    await m.answer(_("Bo'limni tanlang"), reply_markup=distributer_start_btn(user_lang))
 
 
 # async def get_sub_cat(m: Message, state: FSMContext):
@@ -267,7 +315,8 @@ def register_dist(dp: Dispatcher):
     dp.register_message_handler(get_product_supervisor_phone, BackFilter(), state=UserDistState.get_supervisor)
     dp.register_message_handler(get_organization_name, BackFilter(), state=UserDistState.company_name)
     dp.register_message_handler(get_organization_phone, BackFilter(), state=UserDistState.company_phone)
-    dp.register_message_handler(search_magazines_get_region, BackFilter(), state=UserSearchMagazinPaymentState.get_region)
+    dp.register_message_handler(search_magazines_get_region, BackFilter(),
+                                state=UserSearchMagazinPaymentState.get_region)
     dp.register_message_handler(search_magazines_get_city, BackFilter(),
                                 state=UserSearchMagazinPaymentState.get_city)
     dp.register_message_handler(get_buy_dist_sell, BackFilter(), state=UserSearchMagazinPaymentState.get_pay)
@@ -275,5 +324,6 @@ def register_dist(dp: Dispatcher):
     dp.register_message_handler(success_payment, BackFilter(), content_types=ContentTypes.SUCCESSFUL_PAYMENT,
                                 state=UserSearchMagazinPaymentState.get_success)
     dp.register_message_handler(echo_magazine, BackFilter(), state=UserSearchMagazinPaymentState.get_magazines)
+    dp.register_message_handler(send_product_request, BackFilter(), state=UserDistProductRequest.get_description)
     # dp.register_message_handler(get_buis_sub_cat, BackFilter(), state=UserBuisState.get_sub_cat)
     # dp.register_message_handler(get_buis_prod, BackFilter(), state=UserBuisState.get_prod)
