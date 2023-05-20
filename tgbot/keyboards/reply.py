@@ -33,6 +33,13 @@ def main_menu_btns(locale=None):
     return main_menu_btn
 
 
+def my_product_menu_btns(locale=None):
+    main_menu_btn = ReplyKeyboardMarkup(resize_keyboard=True).add(
+        KeyboardButton(_("Agent qo'shish", locale=locale)),
+        KeyboardButton(_("/start", locale=locale)))
+    return main_menu_btn
+
+
 def industry_kb(industries, lang, current_lvl=0):
     industry_btn = ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
     for industry in industries:

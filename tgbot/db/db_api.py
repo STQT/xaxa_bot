@@ -123,6 +123,8 @@ async def get_one_product(config, product_name: str, params=None):
                                params=params) as response:
             if response.status == 200:
                 return await response.json()
+            elif response.status == 404:
+                return None
             else:
                 raise ConnectionError
 

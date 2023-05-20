@@ -58,6 +58,7 @@ async def get_dist_prod_industry(m: Message, state: FSMContext, config):
 # 2 Get product name
 async def get_product_name(m: Message, state: FSMContext, config, user_lang):
     await state.update_data(name=m.text)
+    await state.update_data(is_new=True)
     await m.answer(_("Mahsulot rasmini jo'nating"), reply_markup=None)
     await UserDistState.next()
 
@@ -119,15 +120,18 @@ async def get_organization_name(m: Message, state: FSMContext, config, user_lang
 # Get organization name and send to API
 async def get_organization_phone(m: Message, state: FSMContext, config, user_lang):
     data = await state.get_data()
-    product_data = {
-        "tg_id": m.from_user.id,
-        "industry": data.get("category"),
-        "name": data.get("name"),
-        "description": data.get("description"),
-        "photo_uri": data.get("photo")
-    }
+    if data.get("is_new", False):
+        product_data = {
+            "tg_id": m.from_user.id,
+            "industry": data.get("category"),
+            "name": data.get("name"),
+            "description": data.get("description"),
+            "photo_uri": data.get("photo")
+        }
 
-    product = await add_product(config, product_data)
+        product = await add_product(config, product_data)
+    else:
+        product = await get_one_product(config, data.get('name'))
     if product:
         agent_data = {
             "agent_region": data.get("agent_region"),
@@ -141,8 +145,8 @@ async def get_organization_phone(m: Message, state: FSMContext, config, user_lan
         }
         await add_agent(config, agent_data)
         await m.answer(_("Malumotlaringiz saqlandi"), reply_markup=distributer_start_btn(user_lang))
-        await m.answer(_("Bo'limni tanlang"), reply_markup=distributer_start_btn(user_lang))
         await state.finish()
+        await m.answer(_("Bo'limni tanlang"), reply_markup=distributer_start_btn(user_lang))
         await UserDistMainState.get_main.set()
     else:
         await m.answer(_("Server bilan bog'lanish yo'q. Qayta urunib ko'ring"))
@@ -210,7 +214,6 @@ async def success_payment(m: Message, state: FSMContext, config, user_lang):
     await m.answer(_("Siz oylik patpiskaga a'zo bo'ldingiz!"))
     results = await get_count(config, "check-magazines", "Qashqadaryo", "Koson")
     kb = pagination_reply_btn(results)
-    print("############################################")
     if results["next"]:
         await m.answer(_("Magazinlarni tanlang 👇"), reply_markup=kb)
     else:
@@ -246,26 +249,42 @@ async def echo_magazine(m: Message, state: FSMContext, config, user_lang):
 
 async def get_my_product_handler(m: Message, state: FSMContext, config, user_lang):
     product_name = m.text
+    print(product_name)
+    if product_name == _("Agent qo'shish"):
+        data = await state.get_data()
+        product_name = data.get("product_name")
+        await state.set_state(UserDistState.get_agent_region)
+        await state.update_data(name=product_name)
+        await state.update_data(is_new=False)
+        return await m.answer(_("Agent xududini tanlang"), reply_markup=city_btn)
+    elif product_name == "/start":
+        await m.answer(_("Bo'limni tanlang"), reply_markup=distributer_start_btn(user_lang))
+        return await UserDistMainState.get_main.set()
     data = await get_one_product(config=config, product_name=product_name, params={
-        "distributor__user__tg_id": m.from_user.id
+        "distributor__user__tg_id": m.from_user.id,
+        "name": m.text
     })
-    description = (
-        f"Maxsulot nomi: {data['name']}\n"
-        f"Tavsif: {data['description']}\n"
-        f"Soha: {data[f'category_{user_lang}']}\n"
-    )
 
-    await m.answer_photo(caption=description, photo=data["photo_uri"])
-    for i in data["agents"]:
-        agent_info = (
-            f"Supervisor tel: {i['supervisor_phone']}\n"
-            f"Agent region: {i['agent_region']}\n"
-            f"Agent tel: {i['agent_phone']}\n"
-            f"Korxona nomi: {i['corp_name']}\n"
-            f"Korxona tel: {i['corp_phone']}\n"
+    if data:
+        await state.update_data(product_name=m.text)
+        description = (
+            f"Maxsulot nomi: {data['name']}\n"
+            f"Tavsif: {data['description']}\n"
+            f"Soha: {data[f'category_{user_lang}']}\n"
         )
-        await m.answer(agent_info)
-
+        await m.answer_photo(caption=description, photo=data["photo_uri"])
+        for i in data["agents"]:
+            agent_info = (
+                f"Supervisor tel: {i['supervisor_phone']}\n"
+                f"Agent region: {i['agent_region']}\n"
+                f"Agent tel: {i['agent_phone']}\n"
+                f"Korxona nomi: {i['corp_name']}\n"
+                f"Korxona tel: {i['corp_phone']}\n"
+            )
+            await m.answer(agent_info)
+        await m.answer("Agent qo'shasizmi yana?", reply_markup=my_product_menu_btns(user_lang))
+    else:
+        await m.answer("Kechirasiz siz yozgan maxsulot serverda mavjud emas")
 
 async def send_product_request(m: Message, state: FSMContext, config, user_lang):
     await m.answer(_("Sizning so'rovingiz ishlab chiqaruvchilarga jo'natildi ✅"))
@@ -273,6 +292,13 @@ async def send_product_request(m: Message, state: FSMContext, config, user_lang)
     await state.finish()
     await m.answer(_("Bo'limni tanlang"), reply_markup=distributer_start_btn(user_lang))
     await UserDistProductRequest.get_description.set()
+
+
+async def another_agent_adding(m: Message, state: FSMContext, config, user_lang):
+    await state.update_data(name=m.text)
+    await state.update_data(is_new=False)
+    await m.answer(_("Agent xududini tanlang"), reply_markup=city_btn)
+    await UserDistState.get_agent_region.set()
 
 
 # async def get_sub_cat(m: Message, state: FSMContext):
