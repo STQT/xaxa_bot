@@ -272,6 +272,7 @@ async def send_product_request(m: Message, state: FSMContext, config, user_lang)
     await m.send_copy(config.tg_bot.buis_ids)
     await state.finish()
     await m.answer(_("Bo'limni tanlang"), reply_markup=distributer_start_btn(user_lang))
+    await UserDistProductRequest.get_description.set()
 
 
 # async def get_sub_cat(m: Message, state: FSMContext):
