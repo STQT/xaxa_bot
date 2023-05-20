@@ -105,7 +105,7 @@ async def get_sell_agents_prod(m: Message, state, config, user_lang):
     for i in product["agents"]:
         if i['agent_region'] == data.get('region') and i['agent_city'] == data.get('city'):
             agent_info = (
-                f"{sended_agents + 1}Supervisor tel: {i['supervisor_phone']}\n"
+                f"{sended_agents + 1}. Supervisor tel: {i['supervisor_phone']}\n"
                 f"Agent region: {i['agent_region']}\n"
                 f"Agent shaxar: <b>{i['agent_city']}</b>\n"
                 f"Agent tuman: {i['agent_distreet']}\n"

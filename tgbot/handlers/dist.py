@@ -276,7 +276,7 @@ async def get_my_product_handler(m: Message, state: FSMContext, config, user_lan
         sended_agents = 0
         for i in data["agents"]:
             agent_info = (
-                f"{sended_agents + 1}Supervisor tel: {i['supervisor_phone']}\n"
+                f"{sended_agents + 1}. Supervisor tel: {i['supervisor_phone']}\n"
                 f"Agent region: {i['agent_region']}\n"
                 f"Agent shaxar: <b>{i['agent_city']}</b>\n"
                 f"Agent tuman: {i['agent_distreet']}\n"
