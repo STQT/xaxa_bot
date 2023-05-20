@@ -5,21 +5,28 @@ from tgbot.misc.i18n import i18ns
 _ = i18ns.gettext
 
 
-def pagination_reply_btn(data):
+def pagination_reply_btn(data, page=1):
     content_btn = ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
-    results = data['results']
-    for obj in results:
-        content_btn.add(obj["name"])
-    if data["next"] and data["previous"]:
-        content_btn.add(KeyboardButton(_("⏮ Oldingi")), KeyboardButton(_("⏭ Keyingi")))
-        content_btn.add(KeyboardButton(_("/start")))
-        return content_btn
-    if data["next"]:
-        content_btn.add(KeyboardButton(_("⏭ Keyingi")))
-    if data["previous"]:
-        content_btn.add(KeyboardButton(_("⏮ Oldingi")))
-    content_btn.add(KeyboardButton(_("/start")))
-    return content_btn
+    result_count = data["count"]
+    packs_count = result_count // 100
+    items_per_page = 10
+    start_index = (page - 1) * items_per_page + 1
+    end_index = page * items_per_page
+
+    # for i in range(10)
+    # results = data['results']
+    # for obj in results:
+    #     content_btn.add(obj["name"])
+    # if data["next"] and data["previous"]:
+    #     content_btn.add(KeyboardButton(_("⏮ Oldingi")), KeyboardButton(_("⏭ Keyingi")))
+    #     content_btn.add(KeyboardButton(_("/start")))
+    #     return content_btn
+    # if data["next"]:
+    #     content_btn.add(KeyboardButton(_("⏭ Keyingi")))
+    # if data["previous"]:
+    #     content_btn.add(KeyboardButton(_("⏮ Oldingi")))
+    # content_btn.add(KeyboardButton(_("/start")))
+    # return content_btn
 
 
 async def paginated_response(m: Message, answer_text="", page=None):

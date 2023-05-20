@@ -60,7 +60,6 @@ async def get_org(config, **kwargs) -> dict:
 
 
 async def get_count(config, org: str, region: str, city: str, page: int = None) -> dict:
-    print("@@@@@@@@@@@@@@@@@", config, org, region, city, page)
     async with aiohttp.ClientSession() as session:
         async with session.get(url=config.db.database_url + org,
                                params={

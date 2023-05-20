@@ -277,6 +277,8 @@ async def get_my_product_handler(m: Message, state: FSMContext, config, user_lan
             agent_info = (
                 f"Supervisor tel: {i['supervisor_phone']}\n"
                 f"Agent region: {i['agent_region']}\n"
+                f"Agent shaxar: {i['agent_city']}\n"
+                f"Agent tuman: {i['agent_distreet']}\n"
                 f"Agent tel: {i['agent_phone']}\n"
                 f"Korxona nomi: {i['corp_name']}\n"
                 f"Korxona tel: {i['corp_phone']}\n"
