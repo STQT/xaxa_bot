@@ -273,17 +273,19 @@ async def get_my_product_handler(m: Message, state: FSMContext, config, user_lan
             f"Soha: {data[f'category_{user_lang}']}\n"
         )
         await m.answer_photo(caption=description, photo=data["photo_uri"])
+        sended_agents = 0
         for i in data["agents"]:
             agent_info = (
-                f"Supervisor tel: {i['supervisor_phone']}\n"
+                f"{sended_agents + 1}Supervisor tel: {i['supervisor_phone']}\n"
                 f"Agent region: {i['agent_region']}\n"
-                f"Agent shaxar: {i['agent_city']}\n"
+                f"Agent shaxar: <b>{i['agent_city']}</b>\n"
                 f"Agent tuman: {i['agent_distreet']}\n"
                 f"Agent tel: {i['agent_phone']}\n"
                 f"Korxona nomi: {i['corp_name']}\n"
                 f"Korxona tel: {i['corp_phone']}\n"
             )
             await m.answer(agent_info)
+            sended_agents += 1
         await m.answer("Agent qo'shasizmi yana?", reply_markup=my_product_menu_btns(user_lang))
     else:
         await m.answer("Kechirasiz siz yozgan maxsulot serverda mavjud emas")
