@@ -212,7 +212,9 @@ async def success_payment(m: Message, state: FSMContext, config, user_lang):
     await status_update(config, m.from_user.id)
     await m.delete()
     await m.answer(_("Siz oylik patpiskaga a'zo bo'ldingiz!"))
-    results = await get_count(config, "check-magazines", "Qashqadaryo", "Koson")
+    data = await state.get_data()
+    results = await get_count(config, "check-magazines", data.get("region", "Qashqadaryo"),
+                              data.get("city", "Koson"))
     kb = pagination_reply_btn(results)
     if results["next"]:
         await m.answer(_("Magazinlarni tanlang 👇"), reply_markup=kb)
@@ -292,7 +294,7 @@ async def get_my_product_handler(m: Message, state: FSMContext, config, user_lan
 
 async def send_product_request(m: Message, state: FSMContext, config, user_lang):
     await m.answer(_("Sizning so'rovingiz ishlab chiqaruvchilarga jo'natildi ✅"))
-    await m.send_copy(config.tg_bot.buis_ids)
+    await m.send_copy(config.tg_bot.dist_ids)
     await state.finish()
     await m.answer(_("Bo'limni tanlang"), reply_markup=distributer_start_btn(user_lang))
     await UserDistProductRequest.get_description.set()

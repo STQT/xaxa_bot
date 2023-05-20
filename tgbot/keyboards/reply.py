@@ -33,6 +33,14 @@ def main_menu_btns(locale=None):
     return main_menu_btn
 
 
+def main_menu_buis_btns(locale=None):
+    main_menu_btn = ReplyKeyboardMarkup(resize_keyboard=True).add(
+        KeyboardButton(_("Distributor qidirish️", locale=locale)),
+        KeyboardButton(_("Distributorga so'rov yuborish", locale=locale)))
+    return main_menu_btn
+
+
+
 def my_product_menu_btns(locale=None):
     main_menu_btn = ReplyKeyboardMarkup(resize_keyboard=True).add(
         KeyboardButton(_("Agent qo'shish", locale=locale)),
@@ -83,7 +91,7 @@ region_btn = ReplyKeyboardMarkup(resize_keyboard=True).add(KeyboardButton(_("Sha
                                                            KeyboardButton(_("Kasbi")),
                                                            KeyboardButton(_("Guzor")),
                                                            KeyboardButton(_("Dehqonobod")),
-                                                           KeyboardButton(_("🔙 Orqaga")))
+                                                           KeyboardButton(_("/start")))
 
 city_btn = ReplyKeyboardMarkup(resize_keyboard=True).add(KeyboardButton(_("Toshkent sh")),
                                                          KeyboardButton(_("Toshkent v")),
@@ -106,7 +114,7 @@ def sub_cat_kb(text):
     sub_cats_kb = ReplyKeyboardMarkup(resize_keyboard=True)
     for i in textss[text]:
         sub_cats_kb.insert(KeyboardButton(i))
-    sub_cats_kb.insert(KeyboardButton(_("🔙 Orqaga")))
+    sub_cats_kb.insert(KeyboardButton(_("/start")))
     return sub_cats_kb
 
 
@@ -114,21 +122,21 @@ def prod_cat_kb(text, cat):
     prod_cats_kb = ReplyKeyboardMarkup(resize_keyboard=True)
     for i in textss[cat][text]:
         prod_cats_kb.insert(KeyboardButton(i))
-    prod_cats_kb.insert(KeyboardButton(_("🔙 Orqaga")))
+    prod_cats_kb.insert(KeyboardButton(_("/start")))
     return prod_cats_kb
 
 
 buy_kb = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True).add(
     KeyboardButton("Pay me"),
-    KeyboardButton(_("🔙 Orqaga")))
+    KeyboardButton(_("/start")))
 
 buis_get_info_kb = ReplyKeyboardMarkup(resize_keyboard=True).add(
     KeyboardButton(_("Qaysi distirbyutorga sizning sohangiz kerak")),
-    KeyboardButton(_("🔙 Orqaga")))
+    KeyboardButton(_("/start")))
 
 
-def buis_pro(res):
-    buis_pro_kb = ReplyKeyboardMarkup(resize_keyboard=True, row_width=3).add(KeyboardButton(_("🔙 Orqaga")))
-    for i in res:
-        buis_pro_kb.insert(KeyboardButton(f"{i.id}. {i.name}"))
-    return buis_pro_kb
+# def buis_pro(res):
+#     buis_pro_kb = ReplyKeyboardMarkup(resize_keyboard=True, row_width=3).add(KeyboardButton(_("🔙 Orqaga")))
+#     for i in res:
+#         buis_pro_kb.insert(KeyboardButton(f"{i.id}. {i.name}"))
+#     return buis_pro_kb

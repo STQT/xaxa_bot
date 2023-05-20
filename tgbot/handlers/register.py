@@ -24,10 +24,12 @@ async def user_start(m: Message, status, config):
     else:
         user = await get_user(m.from_user.id, config)
         industries = await get_industries(config, user["lang"])
-        if user["user_type"] == "businessman":
+        if user["user_type"] == "business":
             if user["is_registered"]:
-                await m.answer(_("Qaysi viloyatdan distirbyutor qidiryapsiz? 👇"), reply_markup=city_btn)
-                return await UserBuisState.get_interested_region.set()
+                await m.answer(_("Bo'limni tanlang"), reply_markup=main_menu_buis_btns(user["lang"]))
+                await UserBuisMainState.get_main.set()
+                return
+
             await m.answer(_("Siz qaysi sohada ishlab chiqarasiz? 👇"),
                            reply_markup=industry_kb(industries, user["lang"]))
             return await UserBuisState.get_industry.set()

@@ -5,11 +5,11 @@ from tgbot.misc.i18n import i18ns
 _ = i18ns.gettext
 
 
-def pagination_reply_btn(data):
+def pagination_reply_btn(data, obj_name="name"):
     content_btn = ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
     results = data['results']
     for obj in results:
-        content_btn.add(obj["name"])
+        content_btn.add(obj[obj_name])
     if data["next"] and data["previous"]:
         content_btn.add(KeyboardButton(_("⏮ Oldingi")), KeyboardButton(_("⏭ Keyingi")))
         content_btn.add(KeyboardButton(_("/start")))

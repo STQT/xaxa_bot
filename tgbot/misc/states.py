@@ -57,9 +57,17 @@ class UserDistProductRequest(StatesGroup):
     get_description = State()
 
 
+class UserBuisProductRequest(StatesGroup):
+    get_description = State()
+
+
 class UserDistMainState(StatesGroup):
     get_main = State()
     get_my_products = State()
+
+
+class UserBuisMainState(StatesGroup):
+    get_main = State()
 
 
 class UserAddProductState(StatesGroup):

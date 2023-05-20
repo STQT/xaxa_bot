@@ -61,7 +61,14 @@ async def get_org(config, **kwargs) -> dict:
 
 async def get_count(config, org: str, region: str, city: str, page: int = None) -> dict:
     async with aiohttp.ClientSession() as session:
-        async with session.get(url=config.db.database_url + org,
+        fetch_url = config.db.database_url + org
+        print(fetch_url, {
+                                   "user__region": region,
+                                   "city": city,
+                                   "page": 1 if page is None else page
+                               })
+        print(1 if page is None else page)
+        async with session.get(url=fetch_url,
                                params={
                                    "user__region": region,
                                    "city": city,
@@ -107,9 +114,9 @@ async def get_my_products(config, tg_id: str):
 
 async def get_products(config, params=None):
     async with aiohttp.ClientSession() as session:
-        print(params)
         async with session.get(url=f"{config.db.database_url}products/",
                                params=params) as response:
+            print(response.url, "$#$#%^&^%$%^&%$")
             if response.status == 200:
                 return await response.json()
             else:
@@ -142,6 +149,16 @@ async def get_one_magazin(config, magazin_name: str, params=None):
         async with session.get(url=f"{config.db.database_url}new-magazin/{magazin_name}/",
                                params=params) as response:
             print(response.text, params)
+            if response.status == 200:
+                return await response.json()
+            else:
+                raise ConnectionError
+
+
+async def get_agents(config, params):
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url=f"{config.db.database_url}agents/",
+                               params=params) as response:
             if response.status == 200:
                 return await response.json()
             else:

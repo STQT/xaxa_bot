@@ -35,21 +35,37 @@ _ = i18ns.gettext
 #                                                                                                   user_lang,
 #                                                                                                   current_level))
 
+async def main_menu_buis(m: Message, state: FSMContext, config, user_lang):
+    print('HELLO', m.text)
+    if m.text == _("Distributor qidirish️", locale=user_lang):
+        await m.answer(_("Qaysi viloyatdan distirbyutor qidiryapsiz? 👇"), reply_markup=city_btn)
+        return await UserBuisState.get_interested_region.set()
+    elif m.text == _("Distributorga so'rov yuborish", locale=user_lang):
+        await m.answer(_("O'zingiz haqingizda\n"
+                         "ma'lumot qoldiring\n"
+                         "distirbyutorlarga\n"
+                         "ma'lumotlaringiz qiziq\n"
+                         "bo'lsa aloqaga chiqishadi\n", locale=user_lang), reply_markup=remove_btn)
+        await UserBuisProductRequest.get_description.set()
+    else:
+        await m.answer(_("Noto'g'ri bo'lim tanladingiz"))
 
-async def get_buis_industry(m: Message, state: FSMContext, config, user_lang):
+
+async  def get_buis_industry(m: Message, state: FSMContext, config, user_lang):
     await state.update_data(category=m.text)
     industries = await get_industries(config, user_lang, m.text)
     await m.answer(_("Yo'nalishni tanlang 👇"), reply_markup=industry_kb(industries, user_lang))
     await UserBuisState.next()
 
-
 async def get_buis_sub_industry(m: Message, state: FSMContext, config, user_lang):
     industries = await get_industries(config, user_lang, m.text)
-    data = await state.get_data()
-    results = await get_count(config, "check-magazines", data.get("region"), m.text)
-    await m.answer(_("Distributorlarni tanlang"), reply_markup=industry_kb(industries, user_lang, 1))
+    # data = await state.get_data()
+    # print(data, "################")
+    # user = await get_user(m.from_user.id, config)
+    # results = await get_count(config, "check-magazines", user.get("region"), city=m.text)
+    # print(results)
+    await m.answer(_("Tovar turini tanlang"), reply_markup=industry_kb(industries, user_lang, 1))
     await UserBuisState.next()
-
 
 async def get_buis_prod_industry(m: Message, state: FSMContext, config):
     data = await state.get_data()
@@ -64,7 +80,6 @@ async def get_buis_prod_industry(m: Message, state: FSMContext, config):
     await m.answer(_("Qaysi viloyatdan distribyuter qidiryapsiz?"), reply_markup=city_btn)
     await UserBuisState.next()
 
-
 async def get_interested_region(m: Message, state: FSMContext, config, user_lang):
     if m.text != "Qashqadaryo":
         return await m.answer("Tez orada! 😃")
@@ -73,12 +88,10 @@ async def get_interested_region(m: Message, state: FSMContext, config, user_lang
     await m.answer(_("Qaysi sohada?"), reply_markup=industry_kb(industry, user_lang))
     await UserBuisState.next()
 
-
 async def get_interested_cat(m: Message, state: FSMContext):
     await state.update_data(interested_cat=m.text)
     await m.answer(_("Sohani tanlang 👇"), reply_markup=sub_cat_kb(m.text))
     await UserBuisState.next()
-
 
 async def get_interested_sub_cat(m: Message, state: FSMContext):
     data = await state.get_data()
@@ -86,22 +99,40 @@ async def get_interested_sub_cat(m: Message, state: FSMContext):
     await m.answer(_("Sohani tanlang 👇"), reply_markup=prod_cat_kb(m.text, data["interested_cat"]))
     await UserBuisState.next()
 
-
-async def get_interested_prod(m: Message, state: FSMContext, config, user):
+async def get_interested_prod(m: Message, state: FSMContext, config, user, user_lang):
     data = await state.get_data()
-    res = await get_count(config, "check-distributes", data["interested_region"], "")
     await state.update_data(interested_prod=m.text)
-    if user.status == "basic":
-        await m.answer(
-            _("{spec} sohasi bo'yicha {count} ta distribyuter bor ularni ko'rish uchun PRO versiyani xarid qiling").format(
-                spec=m.text, count=len(res)),
-            reply_markup=buy_kb)
+    if user["is_subscribed"] is False:
+        res = await get_count(config, "check-distributes", data["interested_region"], city="Koson")
+        await m.answer(_("{count} ta distributor. Bular haqida ma'lumot olish uchun PRO versiyani xarid"
+                         " qiling").format(count=res["count"]), reply_markup=buy_kb)
         return await UserBuisState.next()
-    await m.answer(
-        _("{spec} sohasi bo'yicha {count} ta distribyuter").format(spec=m.text, count=len(res)),
-        reply_markup=buis_pro(res))
-    await UserBuisState.get_dist.set()
+    params = {
+        "agent_city": "",
+        "agent_region": data["interested_region"]
+        # TODO: need to filter after using category__name
+    }
+    agents = await get_agents(config, params=params)
+    sended_agents = 0
+    print(agents)
+    for i in agents['results']:
+        agent_info = (
+            f"{sended_agents + 1}. Supervisor tel: {i['supervisor_phone']}\n"
+            f"Agent region: {i['agent_region']}\n"
+            f"Agent shaxar: <b>{i['agent_city']}</b>\n"
+            f"Agent tuman: {i['agent_distreet']}\n"
+            f"Agent tel: {i['agent_phone']}\n"
+            f"Korxona nomi: {i['corp_name']}\n"
+            f"Korxona tel: {i['corp_phone']}\n"
+        )
+        await m.answer(agent_info)
+        sended_agents += 1
 
+    if sended_agents == 0:
+        await m.answer(_("Kechirasiz ushbu tanlovingiz bo'yicha sizni hududizda distributorlar mavjud emas"))
+    await state.finish()
+    await m.answer(_("Bo'limni tanlang"), reply_markup=main_menu_buis_btns(user_lang))
+    await UserBuisMainState.get_main.set()
 
 async def get_buy_buis(m: Message, state: FSMContext, config):
     price = LabeledPrice(label="Pro podpiska uchun to'lov", amount=100 * 100)
@@ -115,21 +146,47 @@ async def get_buy_buis(m: Message, state: FSMContext, config):
                              prices=[price])
     await UserBuisState.next()
 
-
 async def pre_checkout_query(query: PreCheckoutQuery):
     await query.bot.answer_pre_checkout_query(query.id, ok=True)
     await UserBuisState.next()
 
-
-async def success_payment(m: Message, state: FSMContext, config):
+async def success_payment(m: Message, state: FSMContext, config, user_lang):
     data = await state.get_data()
     await status_update(config, m.from_user.id)
     await m.answer(_("Siz oylik patpiskaga a'zo bo'ldingiz"))
-    res = await get_count(data["interested_prod"], "Distirbyutor 🔎", data["interested_region"])
-    await m.answer(
-        _("{spec} sohasi bo'yicha {count} ta distribyuter").format(spec=data["interested_prod"], count=len(res)),
-        reply_markup=buis_pro(res))
-    await UserBuisState.next()
+    params = {
+        "agent_city": data.get("city", "Koson"),
+        "agent_region": data["interested_region"]
+        # TODO: need to filter after using category__name
+    }
+    agents = await get_agents(config, params=params)
+    sended_agents = 0
+    for i in agents['results']:
+        agent_info = (
+            f"{sended_agents + 1}. Supervisor tel: {i['supervisor_phone']}\n"
+            f"Agent region: {i['agent_region']}\n"
+            f"Agent shaxar: <b>{i['agent_city']}</b>\n"
+            f"Agent tuman: {i['agent_distreet']}\n"
+            f"Agent tel: {i['agent_phone']}\n"
+            f"Korxona nomi: {i['corp_name']}\n"
+            f"Korxona tel: {i['corp_phone']}\n"
+        )
+        await m.answer(agent_info, reply_markup=remove_btn)
+        sended_agents += 1
+    if sended_agents == 0:
+        await m.answer(_("Kechirasiz ushbu tanlovingiz bo'yicha sizni hududizda distributorlar mavjud emas"))
+    await state.finish()
+    await m.answer(_("Bo'limni tanlang"), reply_markup=main_menu_buis_btns(user_lang))
+    await UserBuisMainState.get_main.set()
+
+
+async def send_dist_request(m: Message, state: FSMContext, config, user_lang):
+    print("HI")
+    await m.answer(_("Sizning so'rovingiz distributorlarga jo'natildi ✅"))
+    await m.send_copy(config.tg_bot.buis_ids)
+    await state.finish()
+    await m.answer(_("Bo'limni tanlang"), reply_markup=main_menu_buis_btns(user_lang))
+    await UserBuisMainState.get_main.set()
 
 
 async def get_dist(m: Message):
@@ -139,12 +196,11 @@ async def get_dist(m: Message):
                    reply_markup=buis_get_info_kb)
     await UserBuisState.next()
 
-
 async def get_buis_info(m: Message):
-    await m.answer(_("O'zingiz haqingizda ma'lumot qoldiring distirbyutorlarga ma'lumotlaringiz qiziq bo'lsa aloqaga "
-                     "chiqishadi! 👨‍💻"), reply_markup=remove_btn)
+    await m.answer(
+        _("O'zingiz haqingizda ma'lumot qoldiring distirbyutorlarga ma'lumotlaringiz qiziq bo'lsa aloqaga "
+          "chiqishadi! 👨‍💻"), reply_markup=remove_btn)
     await UserBuisState.next()
-
 
 async def send_buis(m: Message, user, config):
     await m.bot.send_message(chat_id=config.tg_bot.buis_ids, text=f"👤 Ismi: {user.name}\n📲 Raqam: {user.number}\n"
@@ -152,7 +208,6 @@ async def send_buis(m: Message, user, config):
                                                                   f"💬 Ma'lumot: {m.text}")
     await m.answer(_("So'rovingiz distribyuterlarga yetkazildi!"), reply_markup=citys_btn)
     await UserBuisState.get_interested_region.set()
-
 
 async def back(m: Message, state: FSMContext):
     data = await state.get_data()
@@ -176,9 +231,10 @@ async def back(m: Message, state: FSMContext):
         await m.answer(_("Sohani tanlang 👇"), reply_markup=sub_cat_kb(data['interested_cat']))
         return await UserBuisState.get_interested_sub_cat.set()
     elif state == "UserBuisState:get_info":
-        res = await get_count(data["interested_prod"], "Distirbyutor 🔎", data["interested_region"])
+        res = await get_count(config, "check-distributes", data["interested_region"], city="Koson")
         await m.answer(
-            _("{spec} sohasi bo'yicha {count} ta distribyuter").format(spec=data["interested_prod"], count=len(res)),
+            _("{spec} sohasi bo'yicha {count} ta distribyuter").format(spec=data["interested_prod"],
+                                                                       count=len(res)),
             reply_markup=buis_pro(res))
         return await UserBuisState.get_dist.set()
     elif state == "UserBuisState:get_dist":
@@ -186,8 +242,9 @@ async def back(m: Message, state: FSMContext):
                        reply_markup=prod_cat_kb(data["interested_sub_cat"], data["interested_cat"]))
         return await UserBuisState.get_interested_prod.set()
 
-
 def register_buis(dp: Dispatcher):
+    dp.register_message_handler(main_menu_buis, state=UserBuisMainState.get_main)
+    dp.register_message_handler(send_dist_request, BackFilter(), state=UserBuisProductRequest.get_description)
     dp.register_message_handler(get_buis_industry, state=UserBuisState.get_industry)
     dp.register_message_handler(get_buis_sub_industry, BackFilter(), state=UserBuisState.get_sub_industry)
     dp.register_message_handler(get_buis_prod_industry, BackFilter(), state=UserBuisState.get_prod_industry)
@@ -203,3 +260,4 @@ def register_buis(dp: Dispatcher):
     dp.register_message_handler(get_buis_info, BackFilter(), state=UserBuisState.get_info)
     dp.register_message_handler(send_buis, BackFilter(), state=UserBuisState.get_text)
     dp.register_message_handler(back, state="*")
+
