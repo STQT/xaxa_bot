@@ -131,7 +131,11 @@ async def get_organization_phone(m: Message, state: FSMContext, config, user_lan
 
         product = await add_product(config, product_data)
     else:
-        product = await get_one_product(config, data.get('name'))
+        params = {
+            f"category__name_{user_lang}": data.get("category"),
+            "name": m.text,
+        }
+        product = await get_one_product(config, data.get('name'), params=params)
     if product:
         agent_data = {
             "agent_region": data.get("agent_region"),

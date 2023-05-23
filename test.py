@@ -1,9 +1,8 @@
 import asyncio
-
-from tgbot import config
-from tgbot.db.db_api import get_industries
 import pprint
+
 from tgbot.config import load_config
+from tgbot.db.db_api import get_industries
 
 
 async def main():

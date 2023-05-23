@@ -98,9 +98,18 @@ async def get_sell_agents_prod(m: Message, state, config, user_lang):
     params = {
         f"category__name_{user_lang}": data.get("category"),
         "agents__agent_city": data.get('city'),
-        "agents__agent_region": data.get('region')
+        "agents__agent_region": data.get('region'),
+        "name": m.text,
     }
     product = await get_one_product(config, m.text, params)
+    description = (
+        f"Maxsulot nomi: {product['name']}\n"
+        f"Tavsif: {product['description']}\n"
+        f"Soha: {product[f'category_{user_lang}']}\n"
+    )
+    print(product)
+    await m.answer_photo(caption=description,
+                         photo=product["photo_uri"])
     sended_agents = 0
     for i in product["agents"]:
         if i['agent_region'] == data.get('region') and i['agent_city'] == data.get('city'):

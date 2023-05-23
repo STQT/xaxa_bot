@@ -10,6 +10,13 @@ async def get_user(user_id, config):
             return await response.json()
 
 
+async def get_distributes(config, params):
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url=f"{config.db.database_url}users/",
+                               params=params) as response:
+            return await response.json()
+
+
 async def check_user(user_id, user_type, config):
     async with aiohttp.ClientSession() as session:
         async with session.get(url=f"{config.db.database_url}{user_type}/{user_id}/") as response:
@@ -35,7 +42,6 @@ async def create_user(tg_id, name, user_lang, user_phone, user_type, region, con
 async def pre_register_user(config, user_type: str, data: dict):
     async with aiohttp.ClientSession() as session:
         async with session.post(url=f"{config.db.database_url}{user_type}/", data=data) as response:
-            print(response.text)
             if response.status == 201:
                 return await response.json()
             else:
@@ -62,12 +68,6 @@ async def get_org(config, **kwargs) -> dict:
 async def get_count(config, org: str, region: str, city: str, page: int = None) -> dict:
     async with aiohttp.ClientSession() as session:
         fetch_url = config.db.database_url + org
-        print(fetch_url, {
-                                   "user__region": region,
-                                   "city": city,
-                                   "page": 1 if page is None else page
-                               })
-        print(1 if page is None else page)
         async with session.get(url=fetch_url,
                                params={
                                    "user__region": region,
@@ -116,7 +116,6 @@ async def get_products(config, params=None):
     async with aiohttp.ClientSession() as session:
         async with session.get(url=f"{config.db.database_url}products/",
                                params=params) as response:
-            print(response.url, "$#$#%^&^%$%^&%$")
             if response.status == 200:
                 return await response.json()
             else:
@@ -148,7 +147,6 @@ async def get_one_magazin(config, magazin_name: str, params=None):
     async with aiohttp.ClientSession() as session:
         async with session.get(url=f"{config.db.database_url}new-magazin/{magazin_name}/",
                                params=params) as response:
-            print(response.text, params)
             if response.status == 200:
                 return await response.json()
             else:

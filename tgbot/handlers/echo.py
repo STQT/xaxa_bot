@@ -9,12 +9,14 @@ async def bot_echo(message: types.Message):
         "Сообщение:",
         message.text
     ]
+    print(message)
 
     await message.answer('\n'.join(text))
 
 
 async def bot_echo_all(message: types.Message, state: FSMContext):
     state_name = await state.get_state()
+    print(message)
     text = [
         f'Эхо в состоянии {hcode(state_name)}',
         'Содержание сообщения:',

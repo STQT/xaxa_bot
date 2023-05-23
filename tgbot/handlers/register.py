@@ -7,9 +7,7 @@ from aiogram.types import Message
 from tgbot.db.db_api import create_user, get_industries, get_count
 from tgbot.db.db_api import get_user
 from tgbot.filters.back import BackFilter
-from tgbot.handlers.dist import search_magazines_get_city
 from tgbot.keyboards.reply import *
-from tgbot.misc.content import paginated_response
 from tgbot.misc.i18n import i18ns
 from tgbot.misc.states import *
 from tgbot.services.sms import send_code
