@@ -24,13 +24,25 @@ async def seller_main_menu(m: Message, state: FSMContext, config, user):
                        reply_markup=seller_start_btn(user["lang"]))
 
 
+async def get_sell_address(m: Message, state: FSMContext, config, user):
+    await state.update_data(city=m.text)
+    await m.answer(_("Iltimos, mahallangizni tanlang"), reply_markup=mahalla_kb(m.text))
+    await UserSellerState.next()
+
+
+async def get_sell_mahalla(m: Message, state: FSMContext, config, user):
+    await state.update_data(mahalla=m.text)
+    await m.answer(_("Iltimos, do'kon nomini kiriting"), reply_markup=ReplyKeyboardRemove())
+    await UserSellerState.next()
+
+
 async def get_sell_name(m: Message, state: FSMContext, config, user):
     data = await state.get_data()
     json_data = {
         "tg_id": m.from_user.id,
         "tg_name": m.from_user.full_name,
-        "distreet": data.get("city", "Nomalum"),
-        "city": data.get("city", "Nomalum"),
+        "mahalla": data.get("mahalla", "Noma'lum"),
+        "city": data.get("city", "Noma'lum"),
         "name": m.text,
     }
     await pre_register_user(config, user_type="magazin", data=json_data)
@@ -38,12 +50,6 @@ async def get_sell_name(m: Message, state: FSMContext, config, user):
     count = await get_count(config, "check-distributes", user["region"], data.get("city", "Nomalum"))
     await m.answer(_("Distribyutrerlar soni {count} ta.\nTo'liq ma'lumot olish uchun Pro versiya harid qiling").
                    format(count=count["count"]), reply_markup=buy_kb)
-    await UserSellerState.next()
-
-
-async def get_sell_address(m: Message, state: FSMContext, config, user):
-    await state.update_data(city=m.text)
-    await m.answer(_("Iltimos, do'kon nomini kiriting"), reply_markup=ReplyKeyboardRemove())
     await UserSellerState.next()
 
 
@@ -94,7 +100,6 @@ async def get_sell_interested_product(m: Message, state, config, user_lang):
     await state.update_data(city=magazin['city'])
     await state.update_data(region=magazin['region'])
 
-    # TODO: change dp request
     # http://localhost:8000/api/new-products/sadfvasfas/?name=qwerty&agents__agent_region=qwert&agents__agent_city=1
     params = {
         f"category__name_{user_lang}": m.text,
@@ -208,14 +213,15 @@ async def get_submit_product_request(m: Message, state, config, user_lang):
 
 
 def register_seller(dp: Dispatcher):
-    dp.register_message_handler(seller_main_menu, state=UserSellMainState.get_main)
+    dp.register_message_handler(seller_main_menu, state=UserSellMainState.get_main)  # noqa
     dp.register_message_handler(get_sell_name, state=UserSellerState.get_name)
     dp.register_message_handler(get_sell_address, state=UserSellerState.get_street)
+    dp.register_message_handler(get_sell_mahalla, state=UserSellerState.get_mahalla)
     dp.register_message_handler(get_buy_sell, state=UserSellerState.get_pay)
     dp.register_pre_checkout_query_handler(pre_checkout_query, state=UserSellerState.get_pay_conf)
     dp.register_message_handler(success_payment, content_types=ContentTypes.SUCCESSFUL_PAYMENT,
                                 state=UserSellerState.get_success)
-    dp.register_message_handler(get_sell_interested_industry, state=UserSellerState.get_interested_industry)
+    dp.register_message_handler(get_sell_interested_industry, state=UserSellerState.get_interested_industry)  # noqa
     dp.register_message_handler(get_sell_interested_sub_industry, state=UserSellerState.get_interested_sub_industry)
     dp.register_message_handler(get_sell_interested_product, state=UserSellerState.get_interested_prod)
     dp.register_message_handler(get_sell_agents_prod, state=UserSellerState.get_agents_prod)

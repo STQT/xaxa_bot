@@ -18,6 +18,7 @@ class UserParamsState(StatesGroup):
 
 class UserSellerState(StatesGroup):
     get_street = State()
+    get_mahalla = State()
     get_name = State()
     get_pay = State()
     get_pay_conf = State()

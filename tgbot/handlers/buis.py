@@ -59,11 +59,6 @@ async def get_buis_industry(m: Message, state: FSMContext, config, user_lang):
 
 async def get_buis_sub_industry(m: Message, state: FSMContext, config, user_lang):
     industries = await get_industries(config, user_lang, m.text)
-    # data = await state.get_data()
-    # print(data, "################")
-    # user = await get_user(m.from_user.id, config)
-    # results = await get_count(config, "check-magazines", user.get("region"), city=m.text)
-    # print(results)
     await m.answer(_("Tovar turini tanlang"), reply_markup=industry_kb(industries, user_lang, 1))
     await UserBuisState.next()
 
@@ -91,16 +86,23 @@ async def get_interested_region(m: Message, state: FSMContext, config, user_lang
     await UserBuisState.next()
 
 
-async def get_interested_cat(m: Message, state: FSMContext):
-    await state.update_data(interested_cat=m.text)
-    await m.answer(_("Soha kategoriyasini tanlang 👇"), reply_markup=sub_cat_kb(m.text))
+
+async def get_interested_cat(m: Message, state: FSMContext, config, user_lang):
+    # await state.update_data(interested_cat=m.text)
+    # await m.answer(_("Soha kategoriyasini tanlang 👇"), reply_markup=sub_cat_kb(m.text))
+    # await UserBuisState.next()
+
+    industries = await get_industries(config, user_lang)
+    await m.answer(_("Soha kategoriyasini tanlang 👇"), reply_markup=industry_kb(industries, user_lang))
     await UserBuisState.next()
 
-
-async def get_interested_sub_cat(m: Message, state: FSMContext):
-    data = await state.get_data()
+async def get_interested_sub_cat(m: Message, state: FSMContext, config, user_lang):
+    # data = await state.get_data()
     await state.update_data(interested_sub_cat=m.text)
-    await m.answer(_("Yo'nalishingizni tanlang 👇"), reply_markup=prod_cat_kb(m.text, data["interested_cat"]))
+    # await m.answer(_("Yo'nalishingizni tanlang 👇"), reply_markup=prod_cat_kb(m.text, data["interested_cat"]))
+    # await UserBuisState.next()
+    industries = await get_industries(config, user_lang)
+    await m.answer(_("Soha kategoriyasini tanlang 👇"), reply_markup=industry_kb(industries, user_lang))
     await UserBuisState.next()
 
 
@@ -218,38 +220,38 @@ async def send_buis(m: Message, user, config):
     await UserBuisState.get_interested_region.set()
 
 
-async def back(m: Message, state: FSMContext):
-    data = await state.get_data()
-    state = await state.get_state()
-    if state == "UserBuisState:get_cat":
-        await m.answer(_("Qaysi viloyatda faoliyat yuritasiz? 🏭"), reply_markup=city_btn)
-        return await UserParamsState.get_region.set()
-    elif state == "UserBuisState:get_sub_cat":
-        await m.answer(_("Sohani tanlang 👇"), reply_markup=industry_kb(await get_industries()))
-        return await UserBuisState.get_cat.set()
-    elif state == "UserBuisState:get_prod":
-        await m.answer(_("Sohani tanlang 👇"), reply_markup=sub_cat_kb(data['cat']))
-        return await UserBuisState.get_sub_cat.set()
-    elif state == "UserBuisState:get_interested_cat":
-        await m.answer(_("Qaysi viloyatda faoliyat yuritasiz? 🏭"), reply_markup=citys_btn)
-        return await UserBuisState.get_interested_region.set()
-    elif state in ["UserBuisState:get_interested_sub_cat", "UserBuisState:get_buy"]:
-        await m.answer(_("Sohani tanlang 👇"), reply_markup=cats_kb)
-        return await UserBuisState.get_interested_cat.set()
-    elif state == "UserBuisState:get_interested_prod":
-        await m.answer(_("Sohani tanlang 👇"), reply_markup=sub_cat_kb(data['interested_cat']))
-        return await UserBuisState.get_interested_sub_cat.set()
-    elif state == "UserBuisState:get_info":
-        res = await get_count(config, "check-distributes", data["interested_region"], city="Koson")
-        await m.answer(
-            _("{spec} sohasi bo'yicha {count} ta distribyuter").format(spec=data["interested_prod"],
-                                                                       count=len(res)),
-            reply_markup=buis_pro(res))
-        return await UserBuisState.get_dist.set()
-    elif state == "UserBuisState:get_dist":
-        await m.answer(_("Sohani tanlang 👇"),
-                       reply_markup=prod_cat_kb(data["interested_sub_cat"], data["interested_cat"]))
-        return await UserBuisState.get_interested_prod.set()
+# async def back(m: Message, state: FSMContext):
+#     data = await state.get_data()
+#     state = await state.get_state()
+#     if state == "UserBuisState:get_cat":
+#         await m.answer(_("Qaysi viloyatda faoliyat yuritasiz? 🏭"), reply_markup=city_btn)
+#         return await UserParamsState.get_region.set()
+#     elif state == "UserBuisState:get_sub_cat":
+#         await m.answer(_("Sohani tanlang 👇"), reply_markup=industry_kb(await get_industries()))
+#         return await UserBuisState.get_cat.set()
+#     elif state == "UserBuisState:get_prod":
+#         await m.answer(_("Sohani tanlang 👇"), reply_markup=sub_cat_kb(data['cat']))
+#         return await UserBuisState.get_sub_cat.set()
+#     elif state == "UserBuisState:get_interested_cat":
+#         await m.answer(_("Qaysi viloyatda faoliyat yuritasiz? 🏭"), reply_markup=citys_btn)
+#         return await UserBuisState.get_interested_region.set()
+#     elif state in ["UserBuisState:get_interested_sub_cat", "UserBuisState:get_buy"]:
+#         await m.answer(_("Sohani tanlang 👇"), reply_markup=cats_kb)
+#         return await UserBuisState.get_interested_cat.set()
+#     elif state == "UserBuisState:get_interested_prod":
+#         await m.answer(_("Sohani tanlang 👇"), reply_markup=sub_cat_kb(data['interested_cat']))
+#         return await UserBuisState.get_interested_sub_cat.set()
+#     elif state == "UserBuisState:get_info":
+#         res = await get_count(config, "check-distributes", data["interested_region"], city="Koson")
+#         await m.answer(
+#             _("{spec} sohasi bo'yicha {count} ta distribyuter").format(spec=data["interested_prod"],
+#                                                                        count=len(res)),
+#             reply_markup=buis_pro(res))
+#         return await UserBuisState.get_dist.set()
+#     elif state == "UserBuisState:get_dist":
+#         await m.answer(_("Sohani tanlang 👇"),
+#                        reply_markup=prod_cat_kb(data["interested_sub_cat"], data["interested_cat"]))
+#         return await UserBuisState.get_interested_prod.set()
 
 
 def register_buis(dp: Dispatcher):
@@ -269,4 +271,4 @@ def register_buis(dp: Dispatcher):
     dp.register_message_handler(get_dist, BackFilter(), state=UserBuisState.get_dist)
     dp.register_message_handler(get_buis_info, BackFilter(), state=UserBuisState.get_info)
     dp.register_message_handler(send_buis, BackFilter(), state=UserBuisState.get_text)
-    dp.register_message_handler(back, state="*")
+    # dp.register_message_handler(back, state="*")

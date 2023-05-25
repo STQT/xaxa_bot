@@ -1,6 +1,6 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
 
-from tgbot.keyboards.text import textss
+from tgbot.keyboards.text import textss, mahalla_dict
 from tgbot.misc.i18n import i18ns
 
 _ = i18ns.lazy_gettext
@@ -126,6 +126,15 @@ def sub_cat_kb(text):
     sub_cats_kb = ReplyKeyboardMarkup(resize_keyboard=True)
     for i in textss[text]:
         sub_cats_kb.insert(KeyboardButton(i))
+    sub_cats_kb.insert(KeyboardButton(_("/start")))
+    return sub_cats_kb
+
+
+def mahalla_kb(shahar):
+    sub_cats_kb = ReplyKeyboardMarkup(resize_keyboard=True)
+    mahallalar: list = mahalla_dict.get(shahar, [])
+    for mahalla in mahallalar:
+        sub_cats_kb.insert(KeyboardButton(mahalla))
     sub_cats_kb.insert(KeyboardButton(_("/start")))
     return sub_cats_kb
 
