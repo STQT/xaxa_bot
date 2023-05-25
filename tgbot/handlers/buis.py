@@ -86,44 +86,42 @@ async def get_interested_region(m: Message, state: FSMContext, config, user_lang
     await UserBuisState.next()
 
 
-
 async def get_interested_cat(m: Message, state: FSMContext, config, user_lang):
     # await state.update_data(interested_cat=m.text)
     # await m.answer(_("Soha kategoriyasini tanlang 👇"), reply_markup=sub_cat_kb(m.text))
     # await UserBuisState.next()
 
-    industries = await get_industries(config, user_lang)
+    industries = await get_industries(config, user_lang, m.text)
     await m.answer(_("Soha kategoriyasini tanlang 👇"), reply_markup=industry_kb(industries, user_lang))
     await UserBuisState.next()
+
 
 async def get_interested_sub_cat(m: Message, state: FSMContext, config, user_lang):
     # data = await state.get_data()
     await state.update_data(interested_sub_cat=m.text)
     # await m.answer(_("Yo'nalishingizni tanlang 👇"), reply_markup=prod_cat_kb(m.text, data["interested_cat"]))
     # await UserBuisState.next()
-    industries = await get_industries(config, user_lang)
+    industries = await get_industries(config, user_lang, m.text)
     await m.answer(_("Soha kategoriyasini tanlang 👇"), reply_markup=industry_kb(industries, user_lang))
     await UserBuisState.next()
 
 
 async def get_interested_prod(m: Message, state: FSMContext, config, user, user_lang):
     data = await state.get_data()
-    await state.update_data(interested_prod=m.text)
+    await state.update_data(interested_category=m.text)
+    params = {
+        "region": data["interested_region"],
+        f"category__name_{user_lang}": m.text
+    }
+    distributes = await get_distributes(config, params=params)
     if user["is_subscribed"] is False:
-        res = await get_count(config, "check-distributes", data["interested_region"], city="Koson")
         await m.answer(_("{count} ta distributor. Bular haqida ma'lumot olish uchun PRO versiyani xarid"
-                         " qiling").format(count=res["count"]), reply_markup=buy_kb)
+                         " qiling").format(count=distributes["count"]), reply_markup=buy_kb)
         await UserBuisState.next()
     else:
-        params = {
-            "region": data["interested_region"]
-            # TODO: need to filter after using category__name
-        }
-        distributes = await get_distributes(config, params=params)
-        # results = await get_count(config, "check-distributes", data.get("region", "Qashqadaryo"),
-        #                           data.get("city", "Koson"))
         sended_agents = 0
-        for i in distributes[:10]:
+        # TODO: paginated responses
+        for i in distributes["results"]:
             distributor_info = (
                 f"{sended_agents + 1}. Distributor tel: {i['phone']}\n"
                 f"Distributor region: {i['region']}\n"
@@ -162,28 +160,45 @@ async def success_payment(m: Message, state: FSMContext, config, user_lang):
     await m.delete()
     await m.answer(_("Siz oylik patpiskaga a'zo bo'ldingiz"))
     params = {
-        "agent_city": data.get("city", "Koson"),
-        "agent_region": data["interested_region"]
-        # TODO: need to filter after using category__name
+        "region": data["interested_region"],
+        f"category__name_{user_lang}": data["interested_category"]
     }
-    agents = await get_agents(config, params=params)
-    # results = await get_count(config, "check-distributes", data.get("region", "Qashqadaryo"),
-    #                           data.get("city", "Koson"))
+    distributes = await get_distributes(config, params=params)
     sended_agents = 0
-    for i in agents['results']:
-        agent_info = (
-            f"{sended_agents + 1}. Supervisor tel: {i['supervisor_phone']}\n"
-            f"Agent region: {i['agent_region']}\n"
-            f"Agent shaxar: <b>{i['agent_city']}</b>\n"
-            f"Agent tuman: {i['agent_distreet']}\n"
-            f"Agent tel: {i['agent_phone']}\n"
-            f"Korxona nomi: {i['corp_name']}\n"
-            f"Korxona tel: {i['corp_phone']}\n"
+    # TODO: paginated responses
+    for i in distributes["results"]:
+        distributor_info = (
+            f"{sended_agents + 1}. Distributor tel: {i['phone']}\n"
+            f"Distributor region: {i['region']}\n"
+            f"Distributor fullname: {i['name']}"
         )
-        await m.answer(agent_info, reply_markup=remove_btn)
+        await m.answer(distributor_info, reply_markup=remove_btn)
         sended_agents += 1
     if sended_agents == 0:
         await m.answer(_("Kechirasiz ushbu tanlovingiz bo'yicha sizni hududizda distributorlar mavjud emas"))
+    # params = {
+    #     "agent_city": data.get("city", "Koson"),
+    #     "agent_region": data["interested_region"]
+    #     # TODO: need to filter after using category__name
+    # }
+    # agents = await get_agents(config, params=params)
+    # # results = await get_count(config, "check-distributes", data.get("region", "Qashqadaryo"),
+    # #                           data.get("city", "Koson"))
+    # sended_agents = 0
+    # for i in agents['results']:
+    #     agent_info = (
+    #         f"{sended_agents + 1}. Supervisor tel: {i['supervisor_phone']}\n"
+    #         f"Agent region: {i['agent_region']}\n"
+    #         f"Agent shaxar: <b>{i['agent_city']}</b>\n"
+    #         f"Agent tuman: {i['agent_distreet']}\n"
+    #         f"Agent tel: {i['agent_phone']}\n"
+    #         f"Korxona nomi: {i['corp_name']}\n"
+    #         f"Korxona tel: {i['corp_phone']}\n"
+    #     )
+    #     await m.answer(agent_info, reply_markup=remove_btn)
+    #     sended_agents += 1
+    # if sended_agents == 0:
+    #     await m.answer(_("Kechirasiz ushbu tanlovingiz bo'yicha sizni hududizda distributorlar mavjud emas"))
     await state.finish()
     await m.answer(_("Bo'limni tanlang"), reply_markup=main_menu_buis_btns(user_lang))
     await UserBuisMainState.get_main.set()
@@ -197,27 +212,11 @@ async def send_dist_request(m: Message, state: FSMContext, config, user_lang):
     await UserBuisMainState.get_main.set()
 
 
-async def get_dist(m: Message):
-    res = await get_type(int(m.text.split(".")[0]))
-    await m.answer(_("👤  Ismi: {name}\n📲 Raqam: {number}\n"
-                     "📍 Manzil: {address}").format(name=res.name, number=res.number, address=res.region),
-                   reply_markup=buis_get_info_kb)
-    await UserBuisState.next()
-
-
 async def get_buis_info(m: Message):
     await m.answer(
         _("O'zingiz haqingizda ma'lumot qoldiring distirbyutorlarga ma'lumotlaringiz qiziq bo'lsa aloqaga "
           "chiqishadi! 👨‍💻"), reply_markup=remove_btn)
     await UserBuisState.next()
-
-
-async def send_buis(m: Message, user, config):
-    await m.bot.send_message(chat_id=config.tg_bot.buis_ids, text=f"👤 Ismi: {user.name}\n📲 Raqam: {user.number}\n"
-                                                                  f"📦 Tovar: {user.product}\n🌆 Shahar: {user.region}\n"
-                                                                  f"💬 Ma'lumot: {m.text}")
-    await m.answer(_("So'rovingiz distribyuterlarga yetkazildi!"), reply_markup=citys_btn)
-    await UserBuisState.get_interested_region.set()
 
 
 # async def back(m: Message, state: FSMContext):
@@ -268,7 +267,5 @@ def register_buis(dp: Dispatcher):
     dp.register_pre_checkout_query_handler(pre_checkout_query, lambda query: True, state=UserBuisState.get_buy_conf)
     dp.register_message_handler(success_payment, content_types=ContentType.SUCCESSFUL_PAYMENT,
                                 state=UserBuisState.get_success)
-    dp.register_message_handler(get_dist, BackFilter(), state=UserBuisState.get_dist)
     dp.register_message_handler(get_buis_info, BackFilter(), state=UserBuisState.get_info)
-    dp.register_message_handler(send_buis, BackFilter(), state=UserBuisState.get_text)
     # dp.register_message_handler(back, state="*")

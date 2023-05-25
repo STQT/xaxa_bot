@@ -12,7 +12,7 @@ async def get_user(user_id, config):
 
 async def get_distributes(config, params):
     async with aiohttp.ClientSession() as session:
-        async with session.get(url=f"{config.db.database_url}users/",
+        async with session.get(url=f"{config.db.database_url}distributor/",
                                params=params) as response:
             return await response.json()
 
