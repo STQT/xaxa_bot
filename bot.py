@@ -9,13 +9,14 @@ from tgbot.config import load_config
 from tgbot.filters.admin import AdminFilter
 from tgbot.filters.back import BackFilter
 from tgbot.handlers.admin import register_admin
+from tgbot.handlers.buis import register_buis
 from tgbot.handlers.dist import register_dist
 from tgbot.handlers.echo import register_echo
-from tgbot.handlers.buis import register_buis
 from tgbot.handlers.register import register_reg
 from tgbot.handlers.seller import register_seller
 from tgbot.middlewares.acl import ACLMiddleware
 from tgbot.middlewares.environment import EnvironmentMiddleware
+from tgbot.middlewares.state_checker import MainMenuRedirectMiddleware
 from tgbot.misc.i18n import i18ns
 
 logger = logging.getLogger(__name__)
@@ -27,6 +28,7 @@ def register_all_middlewares(dp, config):
     dp.setup_middleware(EnvironmentMiddleware(config=config))
     dp.setup_middleware(ACLMiddleware())
     dp.setup_middleware(i18ns)
+    dp.setup_middleware(MainMenuRedirectMiddleware())
 
 
 def register_all_filters(dp):

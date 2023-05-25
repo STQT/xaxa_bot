@@ -86,7 +86,7 @@ async def get_product_agent_region(m: Message, state: FSMContext, config, user_l
 
 async def get_product_agent_city(m: Message, state: FSMContext, config, user_lang):
     await state.update_data(agent_city=m.text)
-    await m.answer(_("Agent tumanini tanlang"), reply_markup=distreet_btn)
+    await m.answer(_("Agent tumanini tanlang"), reply_markup=skip_btn)
     await UserDistState.next()
 
 
@@ -206,8 +206,6 @@ async def get_buy_dist_sell(m: Message, state: FSMContext, config):
 
 
 async def pre_checkout_query(query: PreCheckoutQuery, state: FSMContext):
-    stat = await state.get_state()
-    print("@@@", stat)
     await query.bot.answer_pre_checkout_query(query.id, ok=True)
     await UserSearchMagazinPaymentState.next()
 
@@ -255,7 +253,6 @@ async def echo_magazine(m: Message, state: FSMContext, config, user_lang):
 
 async def get_my_product_handler(m: Message, state: FSMContext, config, user_lang):
     product_name = m.text
-    print(product_name)
     if product_name == _("Agent qo'shish"):
         data = await state.get_data()
         product_name = data.get("product_name")

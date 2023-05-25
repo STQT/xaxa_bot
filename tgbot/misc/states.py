@@ -66,6 +66,17 @@ class UserDistMainState(StatesGroup):
     get_my_products = State()
 
 
+class UserSellMainState(StatesGroup):
+    get_main = State()
+
+
+class UserSendProductRequestState(StatesGroup):
+    get_name = State()
+    get_photo = State()
+    get_description = State()
+    submit = State()
+
+
 class UserBuisMainState(StatesGroup):
     get_main = State()
 

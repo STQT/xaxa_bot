@@ -2,7 +2,7 @@ import random
 
 from aiogram import Dispatcher
 from aiogram.dispatcher import FSMContext
-from aiogram.types import Message
+from aiogram.types import Message, ContentTypes
 
 from tgbot.db.db_api import create_user, get_industries, get_count
 from tgbot.db.db_api import get_user
@@ -38,11 +38,11 @@ async def user_start(m: Message, status, config):
             await m.answer(_("Siz qaysi sohada distirbyutersiz? 👇"), reply_markup=industry_kb(industries, user["lang"]))
             await UserDistState.get_industry.set()
             return
-        else:
+        elif user["user_type"] == "magazin":
             if user["is_registered"]:
                 if user["is_subscribed"]:
-                    await m.answer(_("Sohani tanlang 👇"), reply_markup=industry_kb(industries, user["lang"]))
-                    return await UserSellerState.get_interested_industry.set()
+                    await m.answer(_("Bo'limni tanlang"), reply_markup=seller_start_btn(user["lang"]))
+                    return await UserSellMainState.get_main.set()
                 else:
                     count = await get_count(config, "check-distributes", user["region"], "")
                     await m.answer(_("{count} ta distribyutor. Bular haqida ma'lumot olish uchun PRO versiyani xarid"
@@ -50,6 +50,8 @@ async def user_start(m: Message, status, config):
                     return await UserSellerState.get_pay.set()
             await m.answer(_("Qaysi tumandan distribyuter sizga qiziq? 👇"), reply_markup=region_btn)
             await UserSellerState.get_street.set()
+        else:
+            await m.answer(_("Tizimda xato, birozdan so'ng urunib ko'ring"))
 
 
 async def get_lang(m: Message, state: FSMContext):
@@ -99,8 +101,7 @@ async def get_region(m: Message, state: FSMContext, config):
             user_type = "distributor"
         else:
             user_type = "magazin"
-        user = await create_user(m.from_user.id, data["name"], data["lang"], data["number"], user_type, m.text, config)
-        print(user, "asdasdas")
+        await create_user(m.from_user.id, data["name"], data["lang"], data["number"], user_type, m.text, config)
         mess, kb = "", ""
         industry = await get_industries(config, data["lang"])
         if data["type"] in ["Ishlab chiqaruvchi 🤵‍♂️"]:

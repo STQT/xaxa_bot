@@ -10,6 +10,20 @@ from tgbot.misc.states import *
 _ = i18ns.gettext
 
 
+async def seller_main_menu(m: Message, state: FSMContext, config, user):
+    user_lang = user["lang"]
+    if m.text == _("Maxsulot qidirish", locale=user_lang):
+        industries = await get_industries(config, user_lang)
+        await m.answer(_("Sohani tanlang 👇"), reply_markup=industry_kb(industries, user["lang"]))
+        return await UserSellerState.get_interested_industry.set()
+    elif m.text == _("Maxsulot so'rash", locale=user_lang):
+        await m.answer(_("Maxsulot nomini yozing", locale=user_lang), reply_markup=remove_btn)
+        await UserSendProductRequestState.get_name.set()
+    else:
+        await m.answer(_("Mavjud bo'lmagan tugmani bosdingiz", locale=user_lang),
+                       reply_markup=seller_start_btn(user["lang"]))
+
+
 async def get_sell_name(m: Message, state: FSMContext, config, user):
     data = await state.get_data()
     json_data = {
@@ -107,7 +121,6 @@ async def get_sell_agents_prod(m: Message, state, config, user_lang):
         f"Tavsif: {product['description']}\n"
         f"Soha: {product[f'category_{user_lang}']}\n"
     )
-    print(product)
     await m.answer_photo(caption=description,
                          photo=product["photo_uri"])
     sended_agents = 0
@@ -128,7 +141,74 @@ async def get_sell_agents_prod(m: Message, state, config, user_lang):
         await m.answer(_("Kechirasiz ushbu tovar bo'yicha sizni hududizda agentlar mavjud emas"))
 
 
+async def get_name_product_request(m: Message, state, config, user_lang):
+    await state.update_data(name=m.text)
+    await m.answer(_("Iltimos, maxsulot rasmini mavjud bo'lsa jo'nating"), reply_markup=skip_btn)
+    await UserSendProductRequestState.next()
+
+
+async def get_photo_product_request(m: Message, state, config, user_lang):
+    photo = None
+    if m.text and m.text == _("O'tkazib yuborish", locale=user_lang):
+        pass
+    elif m.photo:
+        photo = m.photo[-1].file_id
+    else:
+        await m.answer(_("Rasm yoki o'tkazib yuborish tugmasini bosing!"), reply_markup=skip_btn)
+        return
+    await state.update_data(photo=photo)
+    await m.answer(_("Iltimos, maxsulot uchun o'z talablaringizni yozing"), reply_markup=skip_btn)
+    await UserSendProductRequestState.next()
+
+
+async def get_description_product_request(m: Message, state, config, user_lang):
+    if m.text == _("O'tkazib yuborish", locale=user_lang):
+        description = None
+    else:
+        description = m.text
+    await state.update_data(description=description)
+    data = await state.get_data()
+    description_text = _("Nomi: {name}\n"
+                         "Tavsif: {description}\n").format(
+        name=data.get('name'),
+        description=_("Mavjud emas") if description is None else description)
+    if data.get("photo"):
+        await m.answer_photo(data.get("photo"), caption=description_text, reply_markup=submit_btn)
+    else:
+        await m.answer(description_text, reply_markup=submit_btn)
+    await UserSendProductRequestState.next()
+
+
+async def get_submit_product_request(m: Message, state, config, user_lang):
+    if m.text == _("✅Jo'natish", locale=user_lang):
+        data = await state.get_data()
+        description = data.get('description')
+        description_text = _("Nomi: {name}\n"
+                             "Tavsif: {description}\n").format(
+            name=data.get('name'),
+            description=_("Mavjud emas") if description is None else description)
+        if data.get("photo"):
+            await m.bot.send_photo(config.tg_bot.sell_ids,
+                                   photo=data.get("photo"),
+                                   caption=description_text)
+        else:
+            await m.bot.send_message(chat_id=config.tg_bot.sell_ids,
+                                     text=description_text)
+        await m.answer(_("Maxsulotingiz jo'natildi✅"))
+        await state.finish()
+        await m.answer(_("Bo'limni tanlang"), reply_markup=seller_start_btn(user_lang))
+        await UserSellMainState.get_main.set()
+    elif m.text == _("❌Bekor qilish", locale=user_lang):
+        await m.answer(_("Bekor qilindi❌"))
+        await state.finish()
+        await m.answer(_("Bo'limni tanlang"), reply_markup=seller_start_btn(user_lang))
+        await UserSellMainState.get_main.set()
+    else:
+        await m.answer(_("Mavjud bo'lmagan buyruq bosildi"))
+
+
 def register_seller(dp: Dispatcher):
+    dp.register_message_handler(seller_main_menu, state=UserSellMainState.get_main)
     dp.register_message_handler(get_sell_name, state=UserSellerState.get_name)
     dp.register_message_handler(get_sell_address, state=UserSellerState.get_street)
     dp.register_message_handler(get_buy_sell, state=UserSellerState.get_pay)
@@ -139,3 +219,8 @@ def register_seller(dp: Dispatcher):
     dp.register_message_handler(get_sell_interested_sub_industry, state=UserSellerState.get_interested_sub_industry)
     dp.register_message_handler(get_sell_interested_product, state=UserSellerState.get_interested_prod)
     dp.register_message_handler(get_sell_agents_prod, state=UserSellerState.get_agents_prod)
+    dp.register_message_handler(get_name_product_request, state=UserSendProductRequestState.get_name)
+    dp.register_message_handler(get_photo_product_request, state=UserSendProductRequestState.get_photo,
+                                content_types=["photo", "text"])
+    dp.register_message_handler(get_description_product_request, state=UserSendProductRequestState.get_description)
+    dp.register_message_handler(get_submit_product_request, state=UserSendProductRequestState.submit)
