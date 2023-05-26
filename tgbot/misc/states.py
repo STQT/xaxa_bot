@@ -47,7 +47,7 @@ class UserDistState(StatesGroup):
     get_prod_description = State()
     get_agent_region = State()
     get_agent_city = State()
-    get_agent_distreet = State()
+    # get_agent_distreet = State()
     get_agent_phone = State()
     get_supervisor = State()
     company_name = State()

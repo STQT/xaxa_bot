@@ -86,14 +86,14 @@ async def get_product_agent_region(m: Message, state: FSMContext, config, user_l
 
 async def get_product_agent_city(m: Message, state: FSMContext, config, user_lang):
     await state.update_data(agent_city=m.text)
-    await m.answer(_("Agent tumanini tanlang"), reply_markup=mahalla_kb(m.text))
-    await UserDistState.next()
-
-
-async def get_product_agent_distreet(m: Message, state: FSMContext, config, user_lang):
-    await state.update_data(agent_distreet=m.text)
     await m.answer(_("Agent telefon raqamini yozing"), reply_markup=ReplyKeyboardRemove())
     await UserDistState.next()
+
+#
+# async def get_product_agent_distreet(m: Message, state: FSMContext, config, user_lang):
+#     await state.update_data(agent_distreet=m.text)
+#     await m.answer(_("Agent telefon raqamini yozing"), reply_markup=ReplyKeyboardRemove())
+#     await UserDistState.next()
 
 
 # Get product agent phone
@@ -147,7 +147,7 @@ async def get_organization_phone(m: Message, state: FSMContext, config, user_lan
         agent_data = {
             "agent_region": data.get("agent_region"),
             "agent_city": data.get("agent_city"),
-            "agent_distreet": data.get("agent_distreet"),
+            # "agent_distreet": data.get("agent_distreet"),
             "agent_phone": data.get("agent_phone"),
             "supervisor_phone": data.get("supervisor_phone"),
             "corp_name": data.get("org_name"),
@@ -352,7 +352,7 @@ def register_dist(dp: Dispatcher):
     dp.register_message_handler(get_product_description, BackFilter(), state=UserDistState.get_prod_description)
     dp.register_message_handler(get_product_agent_region, BackFilter(), state=UserDistState.get_agent_region)
     dp.register_message_handler(get_product_agent_city, BackFilter(), state=UserDistState.get_agent_city)
-    dp.register_message_handler(get_product_agent_distreet, BackFilter(), state=UserDistState.get_agent_distreet)
+    # dp.register_message_handler(get_product_agent_distreet, BackFilter(), state=UserDistState.get_agent_distreet)
     dp.register_message_handler(get_product_agent_phone, BackFilter(), state=UserDistState.get_agent_phone)
     dp.register_message_handler(get_product_supervisor_phone, BackFilter(), state=UserDistState.get_supervisor)
     dp.register_message_handler(get_organization_name, BackFilter(), state=UserDistState.company_name)
