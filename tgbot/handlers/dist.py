@@ -253,7 +253,7 @@ async def echo_magazine(m: Message, state: FSMContext, config, user_lang):
                  f"Telefon: {magazin['phone']}\n"
                  f"Viloyat: {magazin['region']}\n"
                  f"Shahar: {magazin['city']}\n"
-                 f"Tuman: {magazin['distreet']}\n"
+                 f"Mahalla: {magazin['mahalla']}\n"
                  )
         await m.answer(about)
 
