@@ -3,7 +3,7 @@ from aiogram.dispatcher import FSMContext
 from aiogram.types import Message, PreCheckoutQuery, LabeledPrice, ContentTypes
 
 from tgbot.db.db_api import get_industries, add_product, add_agent, get_my_products, get_one_product, get_count, \
-    get_user, status_update, get_one_magazin, pre_register_user
+    get_user, status_update, get_one_magazin
 from tgbot.filters.back import BackFilter
 # from tgbot.keyboards.inline import *
 from tgbot.keyboards.reply import *
@@ -89,6 +89,7 @@ async def get_product_agent_city(m: Message, state: FSMContext, config, user_lan
     await m.answer(_("Agent telefon raqamini yozing"), reply_markup=ReplyKeyboardRemove())
     await UserDistState.next()
 
+
 #
 # async def get_product_agent_distreet(m: Message, state: FSMContext, config, user_lang):
 #     await state.update_data(agent_distreet=m.text)
@@ -121,13 +122,6 @@ async def get_organization_name(m: Message, state: FSMContext, config, user_lang
 async def get_organization_phone(m: Message, state: FSMContext, config, user_lang):
     data = await state.get_data()
     if data.get("is_new", False):
-        json_data = {
-            "tg_id": m.from_user.id,
-            "tg_name": m.from_user.full_name,
-            "industry": data.get("category"),
-        }
-        await pre_register_user(config, user_type="distributor", data=json_data)
-
         product_data = {
             "tg_id": m.from_user.id,
             "industry": data.get("category"),
