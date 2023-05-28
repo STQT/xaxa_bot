@@ -3,11 +3,11 @@ from aiogram.dispatcher import FSMContext
 from aiogram.types import Message, PreCheckoutQuery, LabeledPrice, ContentTypes
 
 from tgbot.db.db_api import get_industries, add_product, add_agent, get_my_products, get_one_product, get_count, \
-    get_user, status_update, get_one_magazin
+    get_user, status_update
 from tgbot.filters.back import BackFilter
 # from tgbot.keyboards.inline import *
 from tgbot.keyboards.reply import *
-from tgbot.misc.content import pagination_reply_btn, new_pagination_reply_btn
+from tgbot.misc.content import new_pagination_reply_btn
 from tgbot.misc.i18n import i18ns
 from tgbot.misc.states import *
 
@@ -257,16 +257,22 @@ async def success_payment(m: Message, state: FSMContext, config, user_lang):
 async def echo_magazine(m: Message, state: FSMContext, config, user_lang):
     data = await state.get_data()
     if m.text.find("📄") == 0:
-        page = m.text.split("-")[0][:-1:].replace("📄", "").replace(" ", "")
-        results = await get_count(config, "check-magazines", data.get("region"), data.get("city"), int(page))
+        if len(m.text.split("-")[0]) == 3:
+            page = 0
+        else:
+            page = m.text.split("-")[0][:-1:].replace("📄", "").replace(" ", "")
+        results = await get_count(config, "check-magazines", data.get("region"), data.get("city"), int(page)+1)
+        text = ""
         for magazin in results["results"]:
-            about = (f"Nomi: {magazin['name']}\n"
+            about = ("🔺🔻🔺🔻🔺🔻🔺🔻🔺🔻\n"
+                     f"Nomi: {magazin['name']}\n"
                      f"Telefon: {magazin['phone']}\n"
                      f"Viloyat: {magazin['region']}\n"
                      f"Shahar: {magazin['city']}\n"
                      f"Mahalla: {magazin['mahalla']}\n"
                      )
-            await m.answer(about)
+            text += about
+        await m.answer(text)
     else:
         results = await get_count(config, "check-magazines", data.get("region"), data.get("city"))
         await m.answer(_("Magazinlarni tanlang 👇"), reply_markup=new_pagination_reply_btn(results))
