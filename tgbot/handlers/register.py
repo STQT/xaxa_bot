@@ -2,12 +2,13 @@ import random
 
 from aiogram import Dispatcher
 from aiogram.dispatcher import FSMContext
-from aiogram.types import Message, ContentTypes
+from aiogram.types import Message
 
 from tgbot.db.db_api import create_user, get_industries, get_count
 from tgbot.db.db_api import get_user
 from tgbot.filters.back import BackFilter
 from tgbot.keyboards.reply import *
+from tgbot.misc.content import new_pagination_reply_btn
 from tgbot.misc.i18n import i18ns
 from tgbot.misc.states import *
 from tgbot.services.sms import send_code
@@ -48,7 +49,7 @@ async def user_start(m: Message, status, config):
                     await m.answer(_("{count} ta distribyutor. Bular haqida ma'lumot olish uchun PRO versiyani xarid"
                                      " qiling").format(count=count["count"]), reply_markup=buy_kb)
                     return await UserSellerState.get_pay.set()
-            await m.answer(_("Qaysi tumandan distribyuter sizga qiziq? 👇"), reply_markup=region_btn)
+            await m.answer(_("Dokoningiz qaysi shaxarda joylashgan ?"), reply_markup=region_btn)
             await UserSellerState.get_street.set()
         else:
             await m.answer(_("Tizimda xato, birozdan so'ng urunib ko'ring"))

@@ -7,7 +7,7 @@ from tgbot.db.db_api import get_industries, add_product, add_agent, get_my_produ
 from tgbot.filters.back import BackFilter
 # from tgbot.keyboards.inline import *
 from tgbot.keyboards.reply import *
-from tgbot.misc.content import pagination_reply_btn
+from tgbot.misc.content import pagination_reply_btn, new_pagination_reply_btn
 from tgbot.misc.i18n import i18ns
 from tgbot.misc.states import *
 
@@ -176,17 +176,18 @@ async def search_magazines_get_city(m: Message, state: FSMContext, config, user_
                          " qiling").format(count=results["count"]), reply_markup=buy_kb)
         return await UserSearchMagazinPaymentState.get_pay.set()
     else:
-        kb = pagination_reply_btn(results)
+        # kb = pagination_reply_btn(results)
         if results['next']:
-            await m.answer(_("Magazinlarni tanlang 👇\n"
-                             "Sahifa: {page}. Umumiy: {count}").format(page=1, count=results['count']), reply_markup=kb)
+            # await m.answer(_("Magazinlarni tanlang 👇\n"
+            #                  "Sahifa: {page}. Umumiy: {count}").format(page=1, count=results['count']), reply_markup=kb)
+            await m.answer(_("Magazinlarni tanlang 👇"), reply_markup=new_pagination_reply_btn(results))
         elif not results['results']:
             await m.answer(_("Hozirda magazinlar mavjud emas"), reply_markup=distributer_start_btn(user_lang))
             await state.finish()
             await UserDistMainState.get_main.set()
             return
         else:
-            await m.answer(_("Magazinlarni tanlang 👇"), reply_markup=kb)
+            await m.answer(_("Magazinlarni tanlang 👇"), reply_markup=new_pagination_reply_btn(results))  # kb
         await state.update_data(page=1)
         await UserSearchMagazinPaymentState.get_magazines.set()
 
@@ -218,38 +219,57 @@ async def success_payment(m: Message, state: FSMContext, config, user_lang):
     data = await state.get_data()
     results = await get_count(config, "check-magazines", data.get("region", "Qashqadaryo"),
                               data.get("city", "Koson"))
-    kb = pagination_reply_btn(results)
-    if results["next"]:
-        await m.answer(_("Magazinlarni tanlang 👇"), reply_markup=kb)
-    else:
-        await m.answer(_("Magazinlarni tanlang 👇"
-                         "Sahifa: {page}. Umumiy: {count}").format(page=1, count=results['count']), reply_markup=kb)
+
+    # kb = pagination_reply_btn(results)
+    # if results["next"]:
+    #     await m.answer(_("Magazinlarni tanlang 👇"), reply_markup=kb)
+    # else:
+    #     await m.answer(_("Magazinlarni tanlang 👇"
+    #                      "Sahifa: {page}. Umumiy: {count}").format(page=1, count=results['count']), reply_markup=kb)
+    await m.answer(_("Magazinlarni tanlang 👇"), reply_markup=new_pagination_reply_btn(results))
     await UserSearchMagazinPaymentState.get_magazines.set()
 
 
+# async def echo_magazine(m: Message, state: FSMContext, config, user_lang):
+#     data = await state.get_data()
+#     page = data.get("page", 1)
+#     if m.text in (_("⏭ Keyingi"), _("⏮ Oldingi")):
+#         if m.text == _("⏭ Keyingi"):
+#             page += 1
+#         elif m.text == _("⏮ Oldingi"):
+#             page -= 1
+#         await state.update_data(page=page)
+#         # results = await get_count(config, "check-magazines", "Qashqadaryo", "Koson", page)
+#         results = await get_count(config, "check-magazines", data.get("region"), data.get("city"), page)
+#         kb = pagination_reply_btn(results)
+#         await m.answer(_("Magazinlarni tanlang 👇\n"
+#                          "Sahifa: {page}. Umumiy: {count}").format(page=page, count=results['count']), reply_markup=kb)
+#     else:
+#         magazin = await get_one_magazin(config, m.text)
+#         about = (f"Nomi: {magazin['name']}\n"
+#                  f"Telefon: {magazin['phone']}\n"
+#                  f"Viloyat: {magazin['region']}\n"
+#                  f"Shahar: {magazin['city']}\n"
+#                  f"Mahalla: {magazin['mahalla']}\n"
+#                  )
+#         await m.answer(about)
+
 async def echo_magazine(m: Message, state: FSMContext, config, user_lang):
     data = await state.get_data()
-    page = data.get("page", 1)
-    if m.text in (_("⏭ Keyingi"), _("⏮ Oldingi")):
-        if m.text == _("⏭ Keyingi"):
-            page += 1
-        elif m.text == _("⏮ Oldingi"):
-            page -= 1
-        await state.update_data(page=page)
-        # results = await get_count(config, "check-magazines", "Qashqadaryo", "Koson", page)
-        results = await get_count(config, "check-magazines", data.get("region"), data.get("city"), page)
-        kb = pagination_reply_btn(results)
-        await m.answer(_("Magazinlarni tanlang 👇\n"
-                         "Sahifa: {page}. Umumiy: {count}").format(page=page, count=results['count']), reply_markup=kb)
+    if m.text.find("📄") == 0:
+        page = m.text.split("-")[0][:-1:].replace("📄", "").replace(" ", "")
+        results = await get_count(config, "check-magazines", data.get("region"), data.get("city"), int(page))
+        for magazin in results["results"]:
+            about = (f"Nomi: {magazin['name']}\n"
+                     f"Telefon: {magazin['phone']}\n"
+                     f"Viloyat: {magazin['region']}\n"
+                     f"Shahar: {magazin['city']}\n"
+                     f"Mahalla: {magazin['mahalla']}\n"
+                     )
+            await m.answer(about)
     else:
-        magazin = await get_one_magazin(config, m.text)
-        about = (f"Nomi: {magazin['name']}\n"
-                 f"Telefon: {magazin['phone']}\n"
-                 f"Viloyat: {magazin['region']}\n"
-                 f"Shahar: {magazin['city']}\n"
-                 f"Mahalla: {magazin['mahalla']}\n"
-                 )
-        await m.answer(about)
+        results = await get_count(config, "check-magazines", data.get("region"), data.get("city"))
+        await m.answer(_("Magazinlarni tanlang 👇"), reply_markup=new_pagination_reply_btn(results))
 
 
 async def get_my_product_handler(m: Message, state: FSMContext, config, user_lang):

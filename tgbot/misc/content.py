@@ -22,5 +22,19 @@ def pagination_reply_btn(data, obj_name="name"):
     return content_btn
 
 
+def new_pagination_reply_btn(data):
+    content_btn = ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
+    count = data["count"]
+    if count <= 10:
+        content_btn.add(KeyboardButton(_("📄 1-10")))
+    else:
+        for page in range(count // 10):
+            first_value = "📄 " + str(page) + "1" if page != 0 else "📄 1"
+            second_value = str(page * 10 + 10) if page != 0 else "10"
+            content_btn.insert(KeyboardButton(_(first_value + "-" + second_value)))
+    content_btn.insert(KeyboardButton(_("/start")))
+    return content_btn
+
+
 async def paginated_response(m: Message, answer_text="", page=None):
     await m.answer(_("Privet"))
