@@ -304,7 +304,6 @@ async def get_my_product_handler(m: Message, state: FSMContext, config, user_lan
         )
         await m.answer_photo(caption=description, photo=data["photo_uri"])
         sended_agents = 0
-        print(data)
         for i in data["agents"]:
             agent_info = (
                 f"{sended_agents + 1}. Supervisor tel: {i['supervisor_phone']}\n"
