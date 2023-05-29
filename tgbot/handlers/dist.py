@@ -326,7 +326,7 @@ async def send_product_request(m: Message, state: FSMContext, config, user_lang)
     await m.send_copy(config.tg_bot.dist_ids)
     await state.finish()
     await m.answer(_("Bo'limni tanlang"), reply_markup=distributer_start_btn(user_lang))
-    await UserDistProductRequest.get_description.set()
+    await UserDistMainState.get_main.set()
 
 
 async def another_agent_adding(m: Message, state: FSMContext, config, user_lang):
