@@ -133,8 +133,8 @@ async def get_organization_phone(m: Message, state: FSMContext, config, user_lan
         product = await add_product(config, product_data)
     else:
         params = {
-            f"category__name_{user_lang}": data.get("category"),
-            "name": m.text,
+            f"distributor__user__tg_id": m.from_user.id,
+            "name": data.get('name'),
         }
         product = await get_one_product(config, data.get('name'), params=params)
     if product:
@@ -261,7 +261,7 @@ async def echo_magazine(m: Message, state: FSMContext, config, user_lang):
             page = 0
         else:
             page = m.text.split("-")[0][:-1:].replace("📄", "").replace(" ", "")
-        results = await get_count(config, "check-magazines", data.get("region"), data.get("city"), int(page)+1)
+        results = await get_count(config, "check-magazines", data.get("region"), data.get("city"), int(page) + 1)
         text = ""
         for magazin in results["results"]:
             about = ("🔺🔻🔺🔻🔺🔻🔺🔻🔺🔻\n"
@@ -316,7 +316,8 @@ async def get_my_product_handler(m: Message, state: FSMContext, config, user_lan
             )
             await m.answer(agent_info)
             sended_agents += 1
-        await m.answer("Agent qo'shasizmi yana?", reply_markup=my_product_menu_btns(user_lang))
+        await m.answer("Agent qo'shasizmi yana?", reply_markup=my_product_menu_btns(user_lang,
+                                                                                    agents_count=sended_agents))
     else:
         await m.answer("Kechirasiz siz yozgan maxsulot serverda mavjud emas")
 

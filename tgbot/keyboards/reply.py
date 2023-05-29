@@ -40,11 +40,11 @@ def main_menu_buis_btns(locale=None):
     return main_menu_btn
 
 
-
-def my_product_menu_btns(locale=None):
-    main_menu_btn = ReplyKeyboardMarkup(resize_keyboard=True).add(
-        KeyboardButton(_("Agent qo'shish", locale=locale)),
-        KeyboardButton(_("/start", locale=locale)))
+def my_product_menu_btns(locale=None, agents_count=0):
+    main_menu_btn = ReplyKeyboardMarkup(resize_keyboard=True)
+    if agents_count < 10:
+        main_menu_btn.insert(KeyboardButton(_("Agent qo'shish", locale=locale)))
+    main_menu_btn.insert(KeyboardButton(_("/start", locale=locale)))
     return main_menu_btn
 
 
@@ -140,7 +140,6 @@ buy_kb = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True).add(
 buis_get_info_kb = ReplyKeyboardMarkup(resize_keyboard=True).add(
     KeyboardButton(_("Qaysi distirbyutorga sizning sohangiz kerak")),
     KeyboardButton(_("/start")))
-
 
 # def buis_pro(res):
 #     buis_pro_kb = ReplyKeyboardMarkup(resize_keyboard=True, row_width=3).add(KeyboardButton(_("🔙 Orqaga")))
