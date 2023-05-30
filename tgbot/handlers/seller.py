@@ -121,29 +121,32 @@ async def get_sell_agents_prod(m: Message, state, config, user_lang):
         "name": m.text,
     }
     product = await get_one_product(config, m.text, params)
-    description = (
-        f"Maxsulot nomi: {product['name']}\n"
-        f"Tavsif: {product['description']}\n"
-        f"Soha: {product[f'category_{user_lang}']}\n"
-    )
-    await m.answer_photo(caption=description,
-                         photo=product["photo_uri"])
-    sended_agents = 0
-    for i in product["agents"]:
-        if i['agent_region'] == data.get('region') and i['agent_city'] == data.get('city'):
-            agent_info = (
-                f"{sended_agents + 1}. Supervisor tel: {i['supervisor_phone']}\n"
-                f"Agent region: {i['agent_region']}\n"
-                f"Agent shaxar: <b>{i['agent_city']}</b>\n"
-                f"Agent tuman: {i['agent_distreet']}\n"
-                f"Agent tel: {i['agent_phone']}\n"
-                f"Korxona nomi: {i['corp_name']}\n"
-                f"Korxona tel: {i['corp_phone']}\n"
-            )
-            await m.answer(agent_info)
-            sended_agents += 1
-    if sended_agents == 0:
-        await m.answer(_("Kechirasiz ushbu tovar bo'yicha sizni hududizda agentlar mavjud emas"))
+    if product:
+        description = (
+            f"Maxsulot nomi: {product['name']}\n"
+            f"Tavsif: {product['description']}\n"
+            f"Soha: {product[f'category_{user_lang}']}\n"
+        )
+        await m.answer_photo(caption=description,
+                             photo=product["photo_uri"])
+        sended_agents = 0
+        for i in product["agents"]:
+            if i['agent_region'] == data.get('region') and i['agent_city'] == data.get('city'):
+                agent_info = (
+                    f"{sended_agents + 1}. Supervisor tel: {i['supervisor_phone']}\n"
+                    f"Agent region: {i['agent_region']}\n"
+                    f"Agent shaxar: <b>{i['agent_city']}</b>\n"
+                    # f"Agent tuman: {i['agent_distreet']}\n"
+                    f"Agent tel: {i['agent_phone']}\n"
+                    f"Korxona nomi: {i['corp_name']}\n"
+                    f"Korxona tel: {i['corp_phone']}\n"
+                )
+                await m.answer(agent_info)
+                sended_agents += 1
+        if sended_agents == 0:
+            await m.answer(_("Kechirasiz ushbu tovar bo'yicha sizni hududizda agentlar mavjud emas"))
+    else:
+        await m.answer(_("Siz tanlagan mahsulot bazada yo'q yoki o'chib ketgan"))
 
 
 async def get_name_product_request(m: Message, state, config, user_lang):
