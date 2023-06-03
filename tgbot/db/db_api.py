@@ -61,7 +61,8 @@ async def get_industries(config, lang: str, parent_str: str = None) -> List:
 
 async def get_org(config, **kwargs) -> dict:
     async with aiohttp.ClientSession() as session:
-        async with session.get(url=config.db.database_url + kwargs['org'] + "/" + str(kwargs["tg_id"])) as response:
+        async with session.get(
+                url=config.db.database_url + kwargs['org'] + "/" + str(kwargs["tg_id"]) + "/") as response:
             return await response.json()
 
 
@@ -79,7 +80,7 @@ async def get_count(config, org: str, region: str, city: str, page: int = None) 
 
 async def status_update(config, tg_id: int) -> None:
     async with aiohttp.ClientSession() as session:
-        async with session.patch(url=f"{config.db.database_url}users/{tg_id}",
+        async with session.patch(url=f"{config.db.database_url}users/{tg_id}/",
                                  json={"is_subscribed": True}) as response:
             return await response.json()
 

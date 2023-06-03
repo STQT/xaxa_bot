@@ -111,7 +111,7 @@ async def get_interested_prod(m: Message, state: FSMContext, config, user, user_
     await state.update_data(interested_category=m.text)
     params = {
         "region": data["interested_region"],
-        f"category__name_{user_lang}": m.text
+        f"product__category__name_{user_lang}": m.text
     }
     distributes = await get_distributes(config, params=params)
     if user["is_subscribed"] is False:
@@ -161,7 +161,7 @@ async def success_payment(m: Message, state: FSMContext, config, user_lang):
     await m.answer(_("Siz oylik patpiskaga a'zo bo'ldingiz"))
     params = {
         "region": data["interested_region"],
-        f"category__name_{user_lang}": data["interested_category"]
+        f"product__category__name_{user_lang}": data["interested_category"]
     }
     distributes = await get_distributes(config, params=params)
     sended_agents = 0
