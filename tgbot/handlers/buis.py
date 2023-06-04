@@ -156,7 +156,7 @@ async def pre_checkout_query(query: PreCheckoutQuery):
 
 async def success_payment(m: Message, state: FSMContext, config, user_lang):
     data = await state.get_data()
-    await status_update(config, m.from_user.id)
+    await status_update(config, m.from_user.id, m.from_user.full_name)
     await m.delete()
     await m.answer(_("Siz oylik patpiskaga a'zo bo'ldingiz"))
     params = {

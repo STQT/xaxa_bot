@@ -74,7 +74,7 @@ async def pre_checkout_query(query: PreCheckoutQuery):
 
 
 async def success_payment(m: Message, config, user_lang):
-    await status_update(config, m.from_user.id)
+    await status_update(config, m.from_user.id, m.from_user.full_name)
     await m.delete()
     await m.answer(_("Siz oylik patpiskaga a'zo bo'ldingiz!"))
     industries = await get_industries(config, user_lang, m.text)

@@ -78,10 +78,10 @@ async def get_count(config, org: str, region: str, city: str, page: int = None) 
             return await response.json()
 
 
-async def status_update(config, tg_id: int) -> None:
+async def status_update(config, tg_id: int, tg_name="nomalum") -> None:
     async with aiohttp.ClientSession() as session:
-        async with session.patch(url=f"{config.db.database_url}users/{tg_id}/",
-                                 json={"is_subscribed": True}) as response:
+        async with session.post(url=f"{config.db.database_url}subscribe/",
+                                json={"tg_id": tg_id, "tg_name": tg_name}) as response:
             return await response.json()
 
 
