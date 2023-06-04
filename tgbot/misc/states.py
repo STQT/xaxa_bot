@@ -54,6 +54,10 @@ class UserDistState(StatesGroup):
     company_phone = State()
 
 
+class ProductDeleteRequest(StatesGroup):
+    get_submit = State()
+
+
 class UserDistProductRequest(StatesGroup):
     get_description = State()
 

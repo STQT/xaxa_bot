@@ -162,3 +162,12 @@ async def get_agents(config, params):
                 return await response.json()
             else:
                 raise ConnectionError
+
+
+async def delete_product(config, pk: str):
+    async with aiohttp.ClientSession() as session:
+        async with session.delete(url=f"{config.db.database_url}delete-product/" + pk + "/") as response:
+            if response.status == 204:
+                return True
+            else:
+                return False

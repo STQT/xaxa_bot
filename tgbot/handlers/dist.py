@@ -2,9 +2,10 @@ from aiogram import Dispatcher
 from aiogram.dispatcher import FSMContext
 from aiogram.types import Message, PreCheckoutQuery, LabeledPrice, ContentTypes
 
-from tgbot.db.db_api import get_industries, add_product, add_agent, get_my_products, get_one_product, get_count, \
-    get_user, status_update
+from tgbot.db.db_api import get_industries, add_product, add_agent, get_one_product, get_count, \
+    get_user, status_update, delete_product
 from tgbot.filters.back import BackFilter
+from tgbot.handlers.dist_db import product_answer, get_my_products_kbs
 # from tgbot.keyboards.inline import *
 from tgbot.keyboards.reply import *
 from tgbot.misc.content import new_pagination_reply_btn
@@ -16,8 +17,7 @@ _ = i18ns.gettext
 
 async def main_dist_start(m: Message, state: FSMContext, config, user_lang):
     if m.text == _("Mening maxsulotlarim", locale=user_lang):
-        products = await get_my_products(config, str(m.from_user.id))
-        await m.answer(_("Mening maxsulotlarim", locale=user_lang), reply_markup=products_kb(products, user_lang))
+        await get_my_products_kbs(m, state, config, user_lang)
         await UserDistMainState.get_my_products.set()
     elif m.text == _("Maxsulot qo'shish", locale=user_lang):
         industries = await get_industries(config, user_lang)
@@ -129,7 +129,6 @@ async def get_organization_phone(m: Message, state: FSMContext, config, user_lan
             "description": data.get("description"),
             "photo_uri": data.get("photo")
         }
-
         product = await add_product(config, product_data)
     else:
         params = {
@@ -287,6 +286,9 @@ async def get_my_product_handler(m: Message, state: FSMContext, config, user_lan
         await state.update_data(name=product_name)
         await state.update_data(is_new=False)
         return await m.answer(_("Agent xududini tanlang"), reply_markup=city_btn)
+    elif product_name == _("Mahsulotni o'chirish"):
+        await ProductDeleteRequest.get_submit.set()
+        return await m.answer("Rostdan o'chirishni istaysizmi?", reply_markup=delete_submit_btn)
     elif product_name == "/start":
         await m.answer(_("Bo'limni tanlang"), reply_markup=distributer_start_btn(user_lang))
         return await UserDistMainState.get_main.set()
@@ -296,28 +298,8 @@ async def get_my_product_handler(m: Message, state: FSMContext, config, user_lan
     })
 
     if data:
-        await state.update_data(product_name=m.text)
-        description = (
-            f"Maxsulot nomi: {data['name']}\n"
-            f"Tavsif: {data['description']}\n"
-            f"Soha: {data[f'category_{user_lang}']}\n"
-        )
-        await m.answer_photo(caption=description, photo=data["photo_uri"])
-        sended_agents = 0
-        for i in data["agents"]:
-            agent_info = (
-                f"{sended_agents + 1}. Supervisor tel: {i['supervisor_phone']}\n"
-                f"Agent region: {i['agent_region']}\n"
-                f"Agent shaxar: <b>{i['agent_city']}</b>\n"
-                # f"Agent tuman: {i['agent_distreet']}\n"
-                f"Agent tel: {i['agent_phone']}\n"
-                f"Korxona nomi: {i['corp_name']}\n"
-                f"Korxona tel: {i['corp_phone']}\n"
-            )
-            await m.answer(agent_info)
-            sended_agents += 1
-        await m.answer("Agent qo'shasizmi yana?", reply_markup=my_product_menu_btns(user_lang,
-                                                                                    agents_count=sended_agents))
+        await state.update_data(product_name=m.text, pk=data.get("id"))
+        await product_answer(m, data, user_lang)
     else:
         await m.answer("Kechirasiz siz yozgan maxsulot serverda mavjud emas")
 
@@ -336,6 +318,22 @@ async def another_agent_adding(m: Message, state: FSMContext, config, user_lang)
     await m.answer(_("Agent xududini tanlang"), reply_markup=city_btn)
     await UserDistState.get_agent_region.set()
 
+
+async def delete_product_submit(m: Message, state: FSMContext, config, user_lang):
+    data = await state.get_data()
+    if m.text == _("Ha ✅"):
+        response = await delete_product(config, str(data.get("pk")))
+        if response is True:
+            await m.answer(_("O'chirildi ✅"))
+        else:
+            await m.answer(_("Serverda o'chirishda muammo yuz berdi"))
+        await get_my_products_kbs(m, state, config, user_lang)
+    else:
+        product = await get_one_product(config=config, product_name=data.get("product_name"), params={
+            "pk": data.get("pk"),
+        })
+        await product_answer(m, product, user_lang)
+        await UserDistMainState.get_my_products.set()
 
 # async def get_sub_cat(m: Message, state: FSMContext):
 #     await state.update_data(sub_cat=m.text)
@@ -388,5 +386,6 @@ def register_dist(dp: Dispatcher):
                                 state=UserSearchMagazinPaymentState.get_success)
     dp.register_message_handler(echo_magazine, BackFilter(), state=UserSearchMagazinPaymentState.get_magazines)
     dp.register_message_handler(send_product_request, BackFilter(), state=UserDistProductRequest.get_description)
+    dp.register_message_handler(delete_product_submit, BackFilter(), state=ProductDeleteRequest.get_submit)
     # dp.register_message_handler(get_buis_sub_cat, BackFilter(), state=UserBuisState.get_sub_cat)
     # dp.register_message_handler(get_buis_prod, BackFilter(), state=UserBuisState.get_prod)
