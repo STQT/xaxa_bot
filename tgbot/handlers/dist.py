@@ -274,6 +274,7 @@ async def echo_magazine(m: Message, state: FSMContext, config, user_lang):
                 number=str(num+int(page)),
                 name=magazin['name'],
                 phone=magazin['phone'],
+                region=magazin['region'],
                 city=magazin['city'],
                 mahalla=magazin['mahalla'])
             text += about
