@@ -262,14 +262,20 @@ async def echo_magazine(m: Message, state: FSMContext, config, user_lang):
             page = m.text.split("-")[0][:-1:].replace("📄", "").replace(" ", "")
         results = await get_count(config, "check-magazines", data.get("region"), data.get("city"), int(page) + 1)
         text = ""
-        for magazin in results["results"]:
+        for num, magazin in enumerate(results["results"]):
             about = ("🔺🔻🔺🔻🔺🔻🔺🔻🔺🔻\n"
-                     f"Nomi: {magazin['name']}\n"
-                     f"Telefon: {magazin['phone']}\n"
-                     f"Viloyat: {magazin['region']}\n"
-                     f"Shahar: {magazin['city']}\n"
-                     f"Mahalla: {magazin['mahalla']}\n"
-                     )
+                     "Tartib raqami: {number}\n"
+                     "Nomi: {name}\n"
+                     "Telefon: {phone}\n"
+                     "Viloyat: {region}\n"
+                     "Shahar: {city}\n"
+                     "Mahalla: {mahalla}\n"
+                     ).format(
+                number=str(num+int(page)),
+                name=magazin['name'],
+                phone=magazin['phone'],
+                city=magazin['city'],
+                mahalla=magazin['mahalla'])
             text += about
         await m.answer(text)
     else:
