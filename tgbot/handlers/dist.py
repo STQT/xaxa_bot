@@ -6,13 +6,17 @@ from tgbot.db.db_api import get_industries, add_product, add_agent, get_one_prod
     get_user, status_update, delete_product
 from tgbot.filters.back import BackFilter
 from tgbot.handlers.dist_db import product_answer, get_my_products_kbs
-# from tgbot.keyboards.inline import *
 from tgbot.keyboards.reply import *
 from tgbot.misc.content import new_pagination_reply_btn
 from tgbot.misc.i18n import i18ns
 from tgbot.misc.states import *
 
 _ = i18ns.gettext
+
+
+async def main_menu_dist_text(m, user_lang):
+    await m.answer(_("Bo'limni tanlang"), reply_markup=distributer_start_btn(user_lang))
+    await UserDistMainState.get_main.set()
 
 
 async def main_dist_start(m: Message, state: FSMContext, config, user_lang):
@@ -34,6 +38,9 @@ async def main_dist_start(m: Message, state: FSMContext, config, user_lang):
 # Mahsulot
 # 1 - step industry
 async def get_dist_industry(m: Message, state: FSMContext, config, user_lang):
+    if m.text == back_button_text:
+        await main_menu_dist_text(m, user_lang)
+        return
     await state.update_data(parent_category=m.text)
     industries = await get_industries(config, user_lang, m.text)
     await m.answer(_("Yo'nalishni tanlang 👇"), reply_markup=industry_kb(industries, user_lang))
@@ -42,14 +49,26 @@ async def get_dist_industry(m: Message, state: FSMContext, config, user_lang):
 
 # 1.1 Select sub_category
 async def get_dist_sub_industry(m: Message, state: FSMContext, config, user_lang):
-    await state.update_data(parent_category=m.text)
+    if m.text == back_button_text:
+        data = await state.get_data()
+        industries = await get_industries(config, user_lang)
+        await m.answer(_("Siz qaysi sohada distirbyutersiz? 👇"), reply_markup=industry_kb(industries, user_lang))
+        await UserDistState.get_industry.set()
+        return
+    await state.update_data(sub_parent_category=m.text)
     industries = await get_industries(config, user_lang, m.text)
     await m.answer(_("Tovarni tanlang 👇"), reply_markup=industry_kb(industries, user_lang, 1))
     await UserDistState.next()
 
 
 # 1.2 Select product type
-async def get_dist_prod_industry(m: Message, state: FSMContext, config):
+async def get_dist_prod_industry(m: Message, state: FSMContext, config, user_lang):
+    data = await state.get_data()
+    if m.text == back_button_text:
+        industries = await get_industries(config, user_lang, data['parent_category'])
+        await m.answer(_("Yo'nalishni tanlang 👇"), reply_markup=industry_kb(industries, user_lang))
+        await UserDistState.get_sub_industry.set()
+        return
     await state.update_data(category=m.text)
     await m.answer(_("Tovar nomini kiriting"), reply_markup=ReplyKeyboardRemove())
     await UserDistState.next()
@@ -158,6 +177,9 @@ async def get_organization_phone(m: Message, state: FSMContext, config, user_lan
 
 
 async def search_magazines_get_region(m: Message, state: FSMContext, config, user_lang):
+    if m.text == back_button_text:
+        await main_menu_dist_text(m, user_lang)
+        return
     await state.update_data(region=m.text)
     await m.answer(_("Shaharni tanlang"), reply_markup=region_btn)
     await UserSearchMagazinPaymentState.next()
@@ -271,7 +293,7 @@ async def echo_magazine(m: Message, state: FSMContext, config, user_lang):
                      "Shahar: {city}\n"
                      "Mahalla: {mahalla}\n"
                      ).format(
-                number=str(num+int(page)*10+1),
+                number=str(num + int(page) * 10 + 1),
                 name=magazin['name'],
                 phone=magazin['phone'],
                 region=magazin['region'],
@@ -285,6 +307,9 @@ async def echo_magazine(m: Message, state: FSMContext, config, user_lang):
 
 
 async def get_my_product_handler(m: Message, state: FSMContext, config, user_lang):
+    if m.text == back_button_text:
+        await main_menu_dist_text(m, user_lang)
+        return
     product_name = m.text
     if product_name == _("Agent qo'shish"):
         data = await state.get_data()
@@ -315,8 +340,7 @@ async def send_product_request(m: Message, state: FSMContext, config, user_lang)
     await m.answer(_("Sizning so'rovingiz ishlab chiqaruvchilarga jo'natildi ✅"))
     await m.send_copy(config.tg_bot.dist_ids)
     await state.finish()
-    await m.answer(_("Bo'limni tanlang"), reply_markup=distributer_start_btn(user_lang))
-    await UserDistMainState.get_main.set()
+    await main_menu_dist_text(m, user_lang)
 
 
 async def another_agent_adding(m: Message, state: FSMContext, config, user_lang):
@@ -340,7 +364,8 @@ async def delete_product_submit(m: Message, state: FSMContext, config, user_lang
             "pk": data.get("pk"),
         })
         await product_answer(m, product, user_lang)
-        await UserDistMainState.get_my_products.set()
+    await UserDistMainState.get_my_products.set()
+
 
 # async def get_sub_cat(m: Message, state: FSMContext):
 #     await state.update_data(sub_cat=m.text)
@@ -367,32 +392,32 @@ async def delete_product_submit(m: Message, state: FSMContext, config, user_lang
 # }
 
 def register_dist(dp: Dispatcher):
-    dp.register_message_handler(main_dist_start, BackFilter(), state=UserDistMainState.get_main)
-    dp.register_message_handler(get_my_product_handler, BackFilter(), state=UserDistMainState.get_my_products)
-    dp.register_message_handler(get_dist_industry, BackFilter(), state=UserDistState.get_industry)
-    dp.register_message_handler(get_dist_sub_industry, BackFilter(), state=UserDistState.get_sub_industry)
-    dp.register_message_handler(get_dist_prod_industry, BackFilter(), state=UserDistState.get_prod_industry)
-    dp.register_message_handler(get_product_name, BackFilter(), state=UserDistState.get_prod_name)
-    dp.register_message_handler(get_product_photo, BackFilter(), content_types='photo',
+    dp.register_message_handler(main_dist_start, state=UserDistMainState.get_main)
+    dp.register_message_handler(get_my_product_handler, state=UserDistMainState.get_my_products)
+    dp.register_message_handler(get_dist_industry, state=UserDistState.get_industry)
+    dp.register_message_handler(get_dist_sub_industry, state=UserDistState.get_sub_industry)
+    dp.register_message_handler(get_dist_prod_industry, state=UserDistState.get_prod_industry)
+    dp.register_message_handler(get_product_name, state=UserDistState.get_prod_name)
+    dp.register_message_handler(get_product_photo, content_types='photo',
                                 state=UserDistState.get_prod_photo)
-    dp.register_message_handler(get_product_description, BackFilter(), state=UserDistState.get_prod_description)
-    dp.register_message_handler(get_product_agent_region, BackFilter(), state=UserDistState.get_agent_region)
-    dp.register_message_handler(get_product_agent_city, BackFilter(), state=UserDistState.get_agent_city)
+    dp.register_message_handler(get_product_description, state=UserDistState.get_prod_description)
+    dp.register_message_handler(get_product_agent_region, state=UserDistState.get_agent_region)
+    dp.register_message_handler(get_product_agent_city, state=UserDistState.get_agent_city)
     # dp.register_message_handler(get_product_agent_distreet, BackFilter(), state=UserDistState.get_agent_distreet)
-    dp.register_message_handler(get_product_agent_phone, BackFilter(), state=UserDistState.get_agent_phone)
-    dp.register_message_handler(get_product_supervisor_phone, BackFilter(), state=UserDistState.get_supervisor)
-    dp.register_message_handler(get_organization_name, BackFilter(), state=UserDistState.company_name)
-    dp.register_message_handler(get_organization_phone, BackFilter(), state=UserDistState.company_phone)
-    dp.register_message_handler(search_magazines_get_region, BackFilter(),
+    dp.register_message_handler(get_product_agent_phone, state=UserDistState.get_agent_phone)
+    dp.register_message_handler(get_product_supervisor_phone, state=UserDistState.get_supervisor)
+    dp.register_message_handler(get_organization_name, state=UserDistState.company_name)
+    dp.register_message_handler(get_organization_phone, state=UserDistState.company_phone)
+    dp.register_message_handler(search_magazines_get_region,
                                 state=UserSearchMagazinPaymentState.get_region)
-    dp.register_message_handler(search_magazines_get_city, BackFilter(),
+    dp.register_message_handler(search_magazines_get_city,
                                 state=UserSearchMagazinPaymentState.get_city)
-    dp.register_message_handler(get_buy_dist_sell, BackFilter(), state=UserSearchMagazinPaymentState.get_pay)
+    dp.register_message_handler(get_buy_dist_sell, state=UserSearchMagazinPaymentState.get_pay)
     dp.register_pre_checkout_query_handler(pre_checkout_query, state=UserSearchMagazinPaymentState.get_pay_conf)
-    dp.register_message_handler(success_payment, BackFilter(), content_types=ContentTypes.SUCCESSFUL_PAYMENT,
+    dp.register_message_handler(success_payment, content_types=ContentTypes.SUCCESSFUL_PAYMENT,
                                 state=UserSearchMagazinPaymentState.get_success)
-    dp.register_message_handler(echo_magazine, BackFilter(), state=UserSearchMagazinPaymentState.get_magazines)
-    dp.register_message_handler(send_product_request, BackFilter(), state=UserDistProductRequest.get_description)
-    dp.register_message_handler(delete_product_submit, BackFilter(), state=ProductDeleteRequest.get_submit)
+    dp.register_message_handler(echo_magazine, state=UserSearchMagazinPaymentState.get_magazines)
+    dp.register_message_handler(send_product_request, state=UserDistProductRequest.get_description)
+    dp.register_message_handler(delete_product_submit, state=ProductDeleteRequest.get_submit)
     # dp.register_message_handler(get_buis_sub_cat, BackFilter(), state=UserBuisState.get_sub_cat)
     # dp.register_message_handler(get_buis_prod, BackFilter(), state=UserBuisState.get_prod)

@@ -68,7 +68,7 @@ def products_kb(industries, lang):
     industry_btn = ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
     for industry in industries:
         industry_btn.insert(industry["name"])
-    industry_btn.insert(back_button_text)
+    industry_btn.insert(str(back_button_text))
     return industry_btn
 
 
