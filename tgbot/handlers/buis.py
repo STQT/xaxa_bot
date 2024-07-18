@@ -51,6 +51,10 @@ async def main_menu_buis(m: Message, state: FSMContext, config, user_lang):
 
 
 async def get_buis_industry(m: Message, state: FSMContext, config, user_lang):
+    if m.text == back_button_text:
+        await m.answer(_("Bo'limni tanlang"), reply_markup=main_menu_buis_btns(user["lang"]))
+        await UserBuisMainState.get_main.set()
+        return
     await state.update_data(category=m.text)
     industries = await get_industries(config, user_lang, m.text)
     await m.answer(_("Yo'nalishni tanlang 👇"), reply_markup=industry_kb(industries, user_lang))
@@ -78,6 +82,10 @@ async def get_buis_prod_industry(m: Message, state: FSMContext, config):
 
 
 async def get_interested_region(m: Message, state: FSMContext, config, user_lang):
+    if m.text == back_button_text:
+        await m.answer(_("Bo'limni tanlang"), reply_markup=main_menu_buis_btns(user_lang))
+        await UserBuisMainState.get_main.set()
+        return
     if m.text != "Qashqadaryo":
         return await m.answer("Tez orada! 😃")
     await state.update_data(interested_region=m.text)
@@ -90,14 +98,24 @@ async def get_interested_cat(m: Message, state: FSMContext, config, user_lang):
     # await state.update_data(interested_cat=m.text)
     # await m.answer(_("Soha kategoriyasini tanlang 👇"), reply_markup=sub_cat_kb(m.text))
     # await UserBuisState.next()
+    if m.text == back_button_text:
+        await m.answer(_("Qaysi viloyatdan distirbyutor qidiryapsiz? 👇"), reply_markup=city_btn)
+        await UserBuisState.previous()
+        return
 
     industries = await get_industries(config, user_lang, m.text)
+    await state.update_data(soha=m.text)
     await m.answer(_("Soha kategoriyasini tanlang 👇"), reply_markup=industry_kb(industries, user_lang))
     await UserBuisState.next()
 
 
 async def get_interested_sub_cat(m: Message, state: FSMContext, config, user_lang):
-    # data = await state.get_data()
+    data = await state.get_data()
+    if m.text == back_button_text:
+        industries = await get_industries(config, user_lang)
+        await m.answer(_("Soha kategoriyasini tanlang 👇"), reply_markup=industry_kb(industries, user_lang))
+        await UserBuisState.previous()
+        return
     await state.update_data(interested_sub_cat=m.text)
     # await m.answer(_("Yo'nalishingizni tanlang 👇"), reply_markup=prod_cat_kb(m.text, data["interested_cat"]))
     # await UserBuisState.next()
@@ -108,6 +126,11 @@ async def get_interested_sub_cat(m: Message, state: FSMContext, config, user_lan
 
 async def get_interested_prod(m: Message, state: FSMContext, config, user, user_lang):
     data = await state.get_data()
+    if m.text == back_button_text:
+        industries = await get_industries(config, user_lang, data['soha'])
+        await m.answer(_("Soha kategoriyasini tanlang 👇"), reply_markup=industry_kb(industries, user_lang))
+        await UserBuisState.previous()
+        return
     await state.update_data(interested_category=m.text)
     params = {
         "region": data["interested_region"],
@@ -205,6 +228,10 @@ async def success_payment(m: Message, state: FSMContext, config, user_lang):
 
 
 async def send_dist_request(m: Message, state: FSMContext, config, user_lang):
+    if m.text == back_button_text:
+        await m.answer(_("Bo'limni tanlang"), reply_markup=main_menu_buis_btns(user["lang"]))
+        await UserBuisState.get_main.set()
+        return
     await m.answer(_("Sizning so'rovingiz distributorlarga jo'natildi ✅"))
     await m.send_copy(config.tg_bot.buis_ids)
     await state.finish()
@@ -255,17 +282,17 @@ async def get_buis_info(m: Message):
 
 def register_buis(dp: Dispatcher):
     dp.register_message_handler(main_menu_buis, state=UserBuisMainState.get_main)
-    dp.register_message_handler(send_dist_request, BackFilter(), state=UserBuisProductRequest.get_description)
+    dp.register_message_handler(send_dist_request,  state=UserBuisProductRequest.get_description)
     dp.register_message_handler(get_buis_industry, state=UserBuisState.get_industry)
-    dp.register_message_handler(get_buis_sub_industry, BackFilter(), state=UserBuisState.get_sub_industry)
-    dp.register_message_handler(get_buis_prod_industry, BackFilter(), state=UserBuisState.get_prod_industry)
-    dp.register_message_handler(get_interested_region, BackFilter(), state=UserBuisState.get_interested_region)
-    dp.register_message_handler(get_interested_cat, BackFilter(), state=UserBuisState.get_interested_cat)
-    dp.register_message_handler(get_interested_sub_cat, BackFilter(), state=UserBuisState.get_interested_sub_cat)
-    dp.register_message_handler(get_interested_prod, BackFilter(), state=UserBuisState.get_interested_prod)
-    dp.register_message_handler(get_buy_buis, BackFilter(), state=UserBuisState.get_buy)
+    dp.register_message_handler(get_buis_sub_industry, state=UserBuisState.get_sub_industry)
+    dp.register_message_handler(get_buis_prod_industry, state=UserBuisState.get_prod_industry)
+    dp.register_message_handler(get_interested_region, state=UserBuisState.get_interested_region)
+    dp.register_message_handler(get_interested_cat, state=UserBuisState.get_interested_cat)
+    dp.register_message_handler(get_interested_sub_cat, state=UserBuisState.get_interested_sub_cat)
+    dp.register_message_handler(get_interested_prod, state=UserBuisState.get_interested_prod)
+    dp.register_message_handler(get_buy_buis, state=UserBuisState.get_buy)
     dp.register_pre_checkout_query_handler(pre_checkout_query, lambda query: True, state=UserBuisState.get_buy_conf)
     dp.register_message_handler(success_payment, content_types=ContentType.SUCCESSFUL_PAYMENT,
                                 state=UserBuisState.get_success)
-    dp.register_message_handler(get_buis_info, BackFilter(), state=UserBuisState.get_info)
+    dp.register_message_handler(get_buis_info, state=UserBuisState.get_info)
     # dp.register_message_handler(back, state="*")

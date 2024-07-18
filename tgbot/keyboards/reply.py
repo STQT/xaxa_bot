@@ -10,13 +10,20 @@ contact_btn = ReplyKeyboardMarkup(resize_keyboard=True).add(
 
 remove_btn = ReplyKeyboardRemove()
 
+back_button_text = _("🔙 Orqaga")
+
+
+def get_back_button_text(locale):
+    text = _("🔙 Orqaga", locale=locale)
+    return text
+
 
 def lang_btns(back):
     lang_btn = ReplyKeyboardMarkup(resize_keyboard=True).add(KeyboardButton("uz 🇺🇿"),
                                                              KeyboardButton("ru 🇷🇺"),
                                                              KeyboardButton("en 🇺🇸"))
     if back:
-        lang_btn.add(KeyboardButton(_("🔙 Orqaga"), callback_data="back"))
+        lang_btn.add(KeyboardButton(back_button_text, callback_data="back"))
     return lang_btn
 
 
@@ -45,7 +52,7 @@ def my_product_menu_btns(locale=None, agents_count=0):
     if agents_count < 25:
         main_menu_btn.add(KeyboardButton(_("Agent qo'shish", locale=locale)))
         main_menu_btn.add(KeyboardButton(_("Mahsulotni o'chirish", locale=locale)))
-    main_menu_btn.add(KeyboardButton(_("/start", locale=locale)))
+    main_menu_btn.add(KeyboardButton(get_back_button_text(locale)))
     return main_menu_btn
 
 
@@ -53,7 +60,7 @@ def industry_kb(industries, lang, current_lvl=0):
     industry_btn = ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
     for industry in industries:
         industry_btn.insert(industry[f"name_{lang}"])
-    industry_btn.insert(KeyboardButton(_("/start")))
+    industry_btn.insert(KeyboardButton(back_button_text))
     return industry_btn
 
 
@@ -61,7 +68,7 @@ def products_kb(industries, lang):
     industry_btn = ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
     for industry in industries:
         industry_btn.insert(industry["name"])
-    industry_btn.insert("/start")
+    industry_btn.insert(back_button_text)
     return industry_btn
 
 
@@ -103,7 +110,7 @@ region_btn = ReplyKeyboardMarkup(resize_keyboard=True).add(KeyboardButton(_("Sha
                                                            KeyboardButton(_("Kasbi tumani")),
                                                            KeyboardButton(_("Guzar tumani")),
                                                            KeyboardButton(_("Dehqonobod tumani")),
-                                                           KeyboardButton(_("/start")))
+                                                           KeyboardButton(back_button_text))
 
 city_btn = ReplyKeyboardMarkup(resize_keyboard=True).add(KeyboardButton(_("Toshkent sh")),
                                                          KeyboardButton(_("Toshkent v")),
@@ -117,7 +124,8 @@ city_btn = ReplyKeyboardMarkup(resize_keyboard=True).add(KeyboardButton(_("Toshk
                                                          KeyboardButton(_("Qoraqalpogʻiston R", )),
                                                          KeyboardButton(_("Samarqand")),
                                                          KeyboardButton(_("Sirdaryo")),
-                                                         KeyboardButton(_("Surxondaryo")))
+                                                         KeyboardButton(_("Surxondaryo")),
+                                                         KeyboardButton(back_button_text))
 
 skip_btn = ReplyKeyboardMarkup(resize_keyboard=True).add(KeyboardButton(_("O'tkazib yuborish")))
 
@@ -130,22 +138,21 @@ def mahalla_kb(shahar):
     mahallalar: list = mahalla_dict.get(shahar, [])
     for mahalla in mahallalar:
         sub_cats_kb.insert(KeyboardButton(mahalla))
-    sub_cats_kb.insert(KeyboardButton(_("/start")))
+    sub_cats_kb.insert(KeyboardButton(back_button_text))
     return sub_cats_kb
 
 
 buy_kb = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True).add(
     KeyboardButton("Pay me"),
-    KeyboardButton(_("/start")))
+    KeyboardButton(back_button_text))
 
 buis_get_info_kb = ReplyKeyboardMarkup(resize_keyboard=True).add(
     KeyboardButton(_("Qaysi distirbyutorga sizning sohangiz kerak")),
-    KeyboardButton(_("/start")))
+    KeyboardButton(back_button_text))
 
 delete_submit_btn = ReplyKeyboardMarkup(resize_keyboard=True).add(
     KeyboardButton(_("Ha ✅")),
     KeyboardButton(_("Yo'q ❌")))
-
 
 # def buis_pro(res):
 #     buis_pro_kb = ReplyKeyboardMarkup(resize_keyboard=True, row_width=3).add(KeyboardButton(_("🔙 Orqaga")))
