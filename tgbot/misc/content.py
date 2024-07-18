@@ -1,6 +1,7 @@
 from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton
 
 from tgbot.misc.i18n import i18ns
+from tgbot.keyboards.reply import back_button_text
 
 _ = i18ns.gettext
 
@@ -32,7 +33,7 @@ def new_pagination_reply_btn(data):
             first_value = "📄 " + str(page) + "1" if page != 0 else "📄 1"
             second_value = str(page * 10 + 10) if page != 0 else "10"
             content_btn.insert(KeyboardButton(first_value + "-" + second_value))
-    content_btn.insert(KeyboardButton(_("/start")))
+    content_btn.insert(KeyboardButton(str(back_button_text)))
     return content_btn
 
 

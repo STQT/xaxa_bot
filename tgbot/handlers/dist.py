@@ -186,6 +186,10 @@ async def search_magazines_get_region(m: Message, state: FSMContext, config, use
 
 
 async def search_magazines_get_city(m: Message, state: FSMContext, config, user_lang):
+    if m.text == back_button_text:
+        await m.answer(_("Qaysi viloyatdagi magazinlar sizga qiziq?", locale=user_lang), reply_markup=city_btn)
+        await UserSearchMagazinPaymentState.get_region.set()
+        return
     # await m.answer(_("Shuncha magazin bor"), reply_markup=ReplyKeyboardRemove())
     await state.update_data(city=m.text)
     data = await state.get_data()
@@ -276,6 +280,10 @@ async def success_payment(m: Message, state: FSMContext, config, user_lang):
 #         await m.answer(about)
 
 async def echo_magazine(m: Message, state: FSMContext, config, user_lang):
+    if m.text == back_button_text:
+        await m.answer(_("Shaharni tanlang"), reply_markup=region_btn)
+        await UserSearchMagazinPaymentState.get_city.set()
+        return
     data = await state.get_data()
     if m.text.find("📄") == 0:
         if len(m.text.split("-")[0]) == 3:
