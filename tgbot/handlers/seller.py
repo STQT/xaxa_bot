@@ -10,6 +10,11 @@ from tgbot.misc.states import *
 _ = i18ns.gettext
 
 
+async def get_main_menu_text(m, user_lang):
+    await m.answer(_("Bo'limni tanlang"), reply_markup=seller_start_btn(user_lang))
+    await UserSellMainState.get_main.set()
+
+
 async def seller_main_menu(m: Message, state: FSMContext, config, user):
     user_lang = user["lang"]
     if m.text == _("Maxsulot qidirish", locale=user_lang):
@@ -82,19 +87,33 @@ async def success_payment(m: Message, config, user_lang):
     await UserSellerState.next()
 
 
-async def get_sell_interested_industry(m: Message, config, user_lang):
+async def get_sell_interested_industry(m: Message, config, state: FSMContext, user_lang):
+    if m.text == back_button_text:
+        await get_main_menu_text(m, user_lang)
+        return
     industries = await get_industries(config, user_lang, m.text)
+    await state.update_data(parent_category=m.text)
     await m.answer(_("Sohani tanlang 👇"), reply_markup=industry_kb(industries, user_lang, 1))
     await UserSellerState.next()
 
 
-async def get_sell_interested_sub_industry(m: Message, config, user_lang):
+async def get_sell_interested_sub_industry(m: Message, config, state, user_lang):
+    if m.text == back_button_text:
+        industries = await get_industries(config, user_lang)
+        await m.answer(_("Sohani tanlang 👇"), reply_markup=industry_kb(industries, user_lang))
+        return await UserSellerState.get_interested_industry.set()
     industries = await get_industries(config, user_lang, m.text)
+    await state.update_data(sub_parent_category=m.text)
     await m.answer(_("Sohani tanlang 👇"), reply_markup=industry_kb(industries, user_lang, 2))
     await UserSellerState.next()
 
 
 async def get_sell_interested_product(m: Message, state, config, user_lang):
+    if m.text == back_button_text:
+        data = await state.get_data()
+        industries = await get_industries(config, user_lang, data['parent_category'])
+        await m.answer(_("Sohani tanlang 👇"), reply_markup=industry_kb(industries, user_lang))
+        return await UserSellerState.get_interested_sub_industry.set()
     await state.update_data(category=m.text)
     magazin = await get_magazin(config, m.from_user.id)
     await state.update_data(city=magazin['city'])
